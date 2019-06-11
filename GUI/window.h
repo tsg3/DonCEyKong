@@ -13,6 +13,17 @@ ALLEGRO_BITMAP* image2;
 ALLEGRO_BITMAP* martillo;
 ALLEGRO_BITMAP* gasolina;
 
+ALLEGRO_BITMAP* marioX[3];
+ALLEGRO_BITMAP* marioY[3];
+int nivelPiso;
+
+bool key[4];
+float xM, yM;
+enum MYKEYS {
+    KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
+};
+
+int obtenerPiso(int x);
 int initialize();
 void finishExecution();
 void reading();
