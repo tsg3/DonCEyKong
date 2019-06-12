@@ -29,6 +29,7 @@ int subiendo_escalera;
 int countKeys();
 int saltando;
 
+int dentroLimite(int direccion);
 int hay_escaleras(int arriba);
 DWORD WINAPI saltar();
 int obtenerPiso(float x);

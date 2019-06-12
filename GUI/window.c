@@ -138,13 +138,13 @@ void reading(){
                     mario = marioZ;
                     k = &j;
                 }
-                if (key[KEY_LEFT] && xM >= 4.0 && !subiendo_escalera) {
+                if (key[KEY_LEFT] && dentroLimite(0) && !subiendo_escalera) {
                     xM -= 2.0;
                     i++;
                     mario = marioY;
                     k = &i;
                 }
-                if (key[KEY_RIGHT] && xM <= 860.0 && !subiendo_escalera) {
+                if (key[KEY_RIGHT] && dentroLimite(1) && !subiendo_escalera) {
                     xM += 2.0;
                     i++;
                     mario = marioX;
@@ -216,6 +216,37 @@ void reading(){
     }
 }
 
+int dentroLimite(int direccion){
+    if ((xM >= 4.0 && !direccion) || (xM <= 860.0 && direccion)){
+        if (direccion && yM == 430 && xM > 817){
+            printf("GAME OVER\n");
+            return 0;
+        }
+        if (!direccion && yM == 354 && xM < 47){
+            printf("GAME OVER\n");
+            return 0;
+        }
+        if (direccion && yM == 274 && xM > 817){
+            printf("GAME OVER\n");
+            return 0;
+        }
+        if (!direccion && yM == 198 && xM < 47){
+            printf("GAME OVER\n");
+            return 0;
+        }
+        if (direccion && yM == 118 && xM > 817){
+            printf("GAME OVER\n");
+            return 0;
+        }
+        if (yM == 40 && ((!direccion && xM < 335) || (direccion && xM > 529))){
+            printf("GAME OVER\n");
+            return 0;
+        }
+        return 1;
+    }
+    return 0;
+}
+
 DWORD WINAPI saltar()
 {
     saltando = 1;
@@ -259,6 +290,10 @@ int hay_escaleras(int arriba){
             subiendo_escalera = 1;
             return 1;
         }
+        if ((yM < 176.0 && yM >= 114.0 && arriba == 0) || (yM > 114.0 && yM <= 176.0 && arriba == 1)) {
+            subiendo_escalera = 1;
+            return 1;
+        }
         subiendo_escalera = 0;
         return 0;
     }
@@ -275,11 +310,31 @@ int hay_escaleras(int arriba){
             subiendo_escalera = 1;
             return 1;
         }
+        if ((yM < 252.0 && yM >= 194.0 && arriba == 0) || (yM > 194.0 && yM <= 252.0 && arriba == 1)) {
+            subiendo_escalera = 1;
+            return 1;
+        }
         subiendo_escalera = 0;
         return 0;
     }
     else if(xM > 432 && xM < 464){
         if ((yM < 340.0 && yM >= 262.0 && arriba == 0) || (yM > 262.0 && yM <= 340.0 && arriba == 1)) {
+            subiendo_escalera = 1;
+            return 1;
+        }
+        subiendo_escalera = 0;
+        return 0;
+    }
+    else if(xM > 272 && xM < 304){
+        if ((yM < 256.0 && yM >= 190.0 && arriba == 0) || (yM > 190.0 && yM <= 256.0 && arriba == 1)) {
+            subiendo_escalera = 1;
+            return 1;
+        }
+        subiendo_escalera = 0;
+        return 0;
+    }
+    else if(xM > 496 && xM < 528){
+        if ((yM < 108.0 && yM >= 40.0 && arriba == 0) || (yM > 40.0 && yM <= 108.0 && arriba == 1)) {
             subiendo_escalera = 1;
             return 1;
         }
@@ -326,7 +381,7 @@ int obtenerPiso(float x){
             i++;
         }
     }
-    else{
+    else if (nivelPiso > 258){
         nx = 46;
         j = 11;
         while (x > -16 + (i * 64)) {
@@ -337,6 +392,36 @@ int obtenerPiso(float x){
             j--;
             i++;
         }
+    }
+    else if (nivelPiso > 196){
+        nx = 64;
+        j = -2;
+        while (x > -16 + (i * 64)) {
+            if (x <= -16 + ((i + 1) * 64)) {
+                nx += 2 * j;
+                break;
+            }
+            j++;
+            i++;
+        }
+    }
+    else if (nivelPiso > 128){
+        nx = 82;
+        if (x <= 432){
+            return 92;
+        }
+        j = -4;
+        while (x > 432 + (i * 64)) {
+            if (x <= 432 + ((i + 1) * 64)) {
+                nx += -2 * j;
+                break;
+            }
+            j++;
+            i++;
+        }
+    }
+    else{
+        nx = 88;
     }
     return nx;
 }
@@ -360,6 +445,28 @@ void escaleras(ALLEGRO_BITMAP  *imagen){
     al_draw_bitmap(imagen, 448, 310, 0);
     al_draw_bitmap(imagen, 736, 332, 0);
     al_draw_bitmap(imagen, 736, 317, 0);
+
+    al_draw_bitmap(imagen, 128, 252, 0);
+    al_draw_bitmap(imagen, 128, 237, 0);
+    al_draw_bitmap(imagen, 288, 256, 0);
+    al_draw_bitmap(imagen, 288, 241, 0);
+    al_draw_bitmap(imagen, 672, 274, 0);
+    al_draw_bitmap(imagen, 672, 212, 0);
+
+    al_draw_bitmap(imagen, 352, 204, 0);
+    al_draw_bitmap(imagen, 352, 140, 0);
+    al_draw_bitmap(imagen, 736, 176, 0);
+    al_draw_bitmap(imagen, 736, 161, 0);
+
+    al_draw_bitmap(imagen, 512, 108, 0);
+    al_draw_bitmap(imagen, 512, 93, 0);
+    al_draw_bitmap(imagen, 512, 78, 0);
+    al_draw_bitmap(imagen, 256, 104, 0);
+    al_draw_bitmap(imagen, 256, 74, 0);
+    al_draw_bitmap(imagen, 256, 44, 0);
+    al_draw_bitmap(imagen, 320, 104, 0);
+    al_draw_bitmap(imagen, 320, 74, 0);
+    al_draw_bitmap(imagen, 320, 44, 0);
 }
 
 void platforms(ALLEGRO_BITMAP  *imagen){
