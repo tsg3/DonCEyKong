@@ -9,13 +9,16 @@ ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 ALLEGRO_TIMER *timer = NULL;
 bool redraw = true;
-const float FPS = 30;
+const float FPS = 60;
 ALLEGRO_BITMAP* image = NULL;
 ALLEGRO_BITMAP* image2 = NULL;
 ALLEGRO_BITMAP* martillo = NULL;
 ALLEGRO_BITMAP* gasolina = NULL;
+ALLEGRO_BITMAP* escalera = NULL;
 bool key[4] = { false, false, false, false };
-int nivelPiso = 494;
+float nivelPiso = 494;
+float salto = 0;
+int plataforma = 1;
 
 int initialize(){
     if(!al_init()) {
@@ -63,6 +66,7 @@ int initialize(){
     marioY[0] = createImage("jumpman_caminar","jumpman_sprite_3.png");
     marioY[1] = createImage("jumpman_caminar","jumpman_sprite_4.png");
     marioY[2] = createImage("jumpman_caminar","jumpman_sprite_5.png");
+    escalera = createImage("estructuras","escalera_sprite_0.png");
     xM = 40;
     yM = nivelPiso;
     al_draw_bitmap(marioX[0], xM, yM, 0);
@@ -80,6 +84,7 @@ int initialize(){
     al_register_event_source(event_queue, al_get_timer_event_source(timer));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
     al_clear_to_color(al_map_rgb(0,0,0));
+    escaleras(escalera);
     barrels(image2);
     platforms(image);
     martillos(martillo);
@@ -101,7 +106,6 @@ void finishExecution(){
 
 void reading(){
     int i = 0;
-    int j = 0;
     int* k = &i;
     ALLEGRO_BITMAP** mario = marioX;
     while(1)
@@ -113,24 +117,24 @@ void reading(){
                 continue;
             }
             else {
-                if (key[KEY_UP] && yM >= 4.0) {
-                    //yM -= 4.0;
+                if (key[KEY_UP] && hay_escaleras(1)) {
+                    nivelPiso -= 1;
                 }
-                if (key[KEY_DOWN] && yM <= 544 - 38.0) {
-                    //yM += 4.0;
+                if (key[KEY_DOWN] && hay_escaleras(0)) {
+                    nivelPiso += 1;
                 }
                 if (key[KEY_LEFT] && xM >= 4.0) {
-                    xM -= 4.0;
+                    xM -= 2.0;
                     i++;
                     mario = marioY;
                 }
-                if (key[KEY_RIGHT] && xM <= 896 - 36.0) {
-                    xM += 4.0;
+                if (key[KEY_RIGHT] && xM <= 860.0) {
+                    xM += 2.0;
                     i++;
                     mario = marioX;
                 }
                 redraw = true;
-                if (i == 18) {
+                if (i == 15) {
                     i = 0;
                 }
             }
@@ -156,6 +160,9 @@ void reading(){
                     key[KEY_RIGHT] = true;
                     i++;
                     break;
+                case ALLEGRO_KEY_SPACE:
+                    CreateThread(NULL, 0, saltar, NULL, 0, 0);
+                    break;
             }
         }
         else if(ev.type == ALLEGRO_EVENT_KEY_UP) {
@@ -180,25 +187,111 @@ void reading(){
             barrels(image2);
             martillos(martillo);
             gasolina_inicial(gasolina);
+            escaleras(escalera);
             platforms(image);
-            yM = nivelPiso - obtenerPiso(xM);
-            al_draw_bitmap(*(mario+(*(k)/6)), xM, yM, 0);
+            yM = nivelPiso - obtenerPiso(xM) - salto;
+            al_draw_bitmap(*(mario+(*(k)/5)), xM, yM, 0);
             al_flip_display();
         }
     }
 }
 
+DWORD WINAPI saltar()
+{
+    int i;
+    for(i = 0; i < 11; i++){
+        Sleep(40);
+        salto = i*3;
+    }
+    Sleep(100);
+    for(; i >= 0; i--){
+        Sleep(40);
+        salto = i*3;
+    }
+    return 0;
+}
+
+int hay_escaleras(int arriba){
+    if (xM > 720 && xM < 752) {
+        if (yM < 484.0 && arriba == 0) {
+            return 1;
+        } else if (yM > 426.0 && arriba == 1) {
+            return 1;
+        }
+        return 0;
+    }
+    else if(xM > 368 && xM < 400){
+        if (yM < 416.0 && arriba == 0) {
+            return 1;
+        }
+        plataforma = 1;
+        if (yM > 342.0 && arriba == 1) {
+            return 1;
+        }
+        return 0;
+    }
+    else if(xM > 112 && xM < 144){
+        if (yM < 408.0 && arriba == 0) {
+            return 1;
+        } else if (yM > 350.0 && arriba == 1) {
+            return 1;
+        }
+        return 0;
+    }
+    return 0;
+}
+
 int obtenerPiso(int x){
     int nx = 0;
     int i = 0;
-    while (x > 896/2 - 16 + (i*64)){
-        if (x <= 896/2 - 16 + ((i+1)*64)){
-            nx = (i+1) * 2;
-            break;
+    int j;
+    if (nivelPiso > 436) {
+        while (x > 432 + (i * 64)) {
+            if (x <= 432 + ((i + 1) * 64)) {
+                nx = 2 * i + 2;
+                break;
+            }
+            i++;
         }
-        i++;
+    }
+    else if (nivelPiso > 378){
+        nx = 10;
+        j = 11;
+        while (x > -16 + (i * 64)) {
+            if (x <= -16 + ((i + 1) * 64)) {
+                nx += 2 * j;
+                break;
+            }
+            j--;
+            i++;
+        }
+    }
+    else{
+        nx = 28;
+        j = -2;
+        while (x > -16 + (i * 64)) {
+            if (x <= -16 + ((i + 1) * 64)) {
+                nx += 2 * j;
+                break;
+            }
+            j++;
+            i++;
+        }
     }
     return nx;
+}
+
+void escaleras(ALLEGRO_BITMAP  *image){
+    al_draw_bitmap(image, 736, 487, 0);
+    al_draw_bitmap(image, 736, 472, 0);
+    al_draw_bitmap(image, 320, 510, 0);
+    al_draw_bitmap(image, 320, 446, 0);
+
+    al_draw_bitmap(image, 128, 397, 0);
+    al_draw_bitmap(image, 128, 412, 0);
+    al_draw_bitmap(image, 384, 390, 0);
+    al_draw_bitmap(image, 384, 405, 0);
+    al_draw_bitmap(image, 384, 420, 0);
 }
 
 void platforms(ALLEGRO_BITMAP  *image){

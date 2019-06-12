@@ -12,21 +12,27 @@ ALLEGRO_BITMAP* image;
 ALLEGRO_BITMAP* image2;
 ALLEGRO_BITMAP* martillo;
 ALLEGRO_BITMAP* gasolina;
+ALLEGRO_BITMAP* escalera;
 
 ALLEGRO_BITMAP* marioX[3];
 ALLEGRO_BITMAP* marioY[3];
-int nivelPiso;
+float nivelPiso;
 
 bool key[4];
 float xM, yM;
 enum MYKEYS {
     KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
 };
+float salto;
+int plataforma;
 
+int hay_escaleras(int arriba);
+DWORD WINAPI saltar();
 int obtenerPiso(int x);
 int initialize();
 void finishExecution();
 void reading();
+void escaleras(ALLEGRO_BITMAP  *image);
 void platforms(ALLEGRO_BITMAP  *image);
 void barrels(ALLEGRO_BITMAP  *image);
 void martillos(ALLEGRO_BITMAP *martillo);

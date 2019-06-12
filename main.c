@@ -5,7 +5,7 @@
 
 int main(){
 
-    /*int execution = initialize();
+    int execution = initialize();
 
     switch (execution){
         case 1: break;
@@ -16,9 +16,9 @@ int main(){
 
     reading();
 
-    finishExecution();*/
+    finishExecution();
 
-    int inicio = iniciar_server();
+    /*int inicio = iniciar_server();
 
     if (inicio == -666) {
 
@@ -32,5 +32,5 @@ int main(){
     }
     else{
         return (EXIT_FAILURE);
-    }
+    }*/
 }
