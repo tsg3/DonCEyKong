@@ -16,10 +16,11 @@ ALLEGRO_BITMAP* martillo = NULL;
 ALLEGRO_BITMAP* gasolina = NULL;
 ALLEGRO_BITMAP* escalera = NULL;
 bool key[4] = { false, false, false, false };
-float nivelPiso = 494;
-float salto = 0;
+float nivelPiso = 494.0;
+float salto = 0.0;
 int subiendo_escalera = 0;
 int saltando = 0;
+int vivo = 1;
 
 int initialize(){
     if(!al_init()) {
@@ -69,6 +70,11 @@ int initialize(){
     marioY[2] = createImage("jumpman_caminar","jumpman_sprite_5.png");
     marioZ[0] = createImage("jumpman_subiendo","jumpman_subiendo_sprite_1.png");
     marioZ[1] = createImage("jumpman_subiendo","jumpman_subiendo_sprite_4.png");
+    marioM[0] = createImage("jumpman_rodando","jumpman_rodando_sprite_0.png");
+    marioM[1] = createImage("jumpman_rodando","jumpman_rodando_sprite_1.png");
+    marioM[2] = createImage("jumpman_rodando","jumpman_rodando_sprite_2.png");
+    marioM[3] = createImage("jumpman_rodando","jumpman_rodando_sprite_3.png");
+    marioM[4] = createImage("jumpman_muerto","Jumpman_muerto_sprite_0.png");
     escalera = createImage("estructuras","escalera_sprite_0.png");
     xM = 40;
     yM = nivelPiso;
@@ -76,7 +82,7 @@ int initialize(){
 
 
     if(!image || !image2 || !martillo || !gasolina || !escalera || !marioX[0] || !marioX[1]
-    || !marioX[2] || !marioY[0] || !marioY[1] || !marioY[2] || !marioZ[0] || !marioZ[1]) {
+    || !marioX[2] || !marioY[0] || !marioY[1] || !marioY[2] || !marioZ[0] || !marioZ[1] || !marioM[0] || !marioM[1] || !marioM[2] || !marioM[3]) {
         al_show_native_message_box(display, "Error", "Error", "Failed to load image!",
                                    NULL, ALLEGRO_MESSAGEBOX_ERROR);
         al_destroy_display(display);
@@ -119,32 +125,34 @@ void reading(){
     int i = 0;
     int j = 0;
     int* k = &i;
-    ALLEGRO_BITMAP** mario = marioX;
+    mario = marioX;
     while(1)
     {
         ALLEGRO_EVENT ev;
         al_wait_for_event(event_queue, &ev);
-        if(ev.type == ALLEGRO_EVENT_TIMER) {
+        if (dentroLimite() == -1){
+        }
+        else if(ev.type == ALLEGRO_EVENT_TIMER) {
             if(countKeys()==1) {
-                if (key[KEY_UP] && hay_escaleras(1)) {
+                if (key[KEY_UP] && hay_escaleras(1) && !saltando && vivo) {
                     nivelPiso -= 1;
                     j++;
                     mario = marioZ;
                     k = &j;
                 }
-                if (key[KEY_DOWN] && hay_escaleras(0)) {
+                if (key[KEY_DOWN] && hay_escaleras(0) && !saltando && vivo) {
                     nivelPiso += 1;
                     j++;
                     mario = marioZ;
                     k = &j;
                 }
-                if (key[KEY_LEFT] && dentroLimite(0) && !subiendo_escalera) {
+                if (key[KEY_LEFT] && xM >= 4.0 && !subiendo_escalera && vivo) {
                     xM -= 2.0;
                     i++;
                     mario = marioY;
                     k = &i;
                 }
-                if (key[KEY_RIGHT] && dentroLimite(1) && !subiendo_escalera) {
+                if (key[KEY_RIGHT] && xM <= 860.0 && !subiendo_escalera && vivo) {
                     xM += 2.0;
                     i++;
                     mario = marioX;
@@ -163,7 +171,7 @@ void reading(){
             break;
         }
         else if(ev.type == ALLEGRO_EVENT_KEY_DOWN) {
-            switch(ev.keyboard.keycode) {
+            switch (ev.keyboard.keycode) {
                 case ALLEGRO_KEY_UP:
                     key[KEY_UP] = true;
                     break;
@@ -179,14 +187,14 @@ void reading(){
                     i++;
                     break;
                 case ALLEGRO_KEY_SPACE:
-                    if (!subiendo_escalera && !saltando) {
+                    if (!subiendo_escalera && !saltando && vivo) {
                         CreateThread(NULL, 0, saltar, NULL, 0, 0);
                     }
                     break;
             }
         }
         else if(ev.type == ALLEGRO_EVENT_KEY_UP) {
-            switch(ev.keyboard.keycode) {
+            switch (ev.keyboard.keycode) {
                 case ALLEGRO_KEY_UP:
                     key[KEY_UP] = false;
                     break;
@@ -210,40 +218,111 @@ void reading(){
             escaleras(escalera);
             platforms(image);
             yM = nivelPiso - obtenerPiso(xM) - salto;
-            al_draw_bitmap(*(mario+((*k)/5)), xM, yM, 0);
+            if (!vivo) {
+                //printf("y %f   p %f   f %f   m %d\n",yM, posicionMuerto,finalMuerto,muertoID);
+                if (posicionMuerto == finalMuerto){
+                    muertoID = 4;
+                    vivo = 1;
+                }
+                al_draw_bitmap(marioM[muertoID], xM, posicionMuerto, 0);
+                if (muertoID == 4){
+                    xM = 40.0;
+                    yM = 494.0;
+                    nivelPiso = 494.0;
+                }
+            }
+            else{
+                al_draw_bitmap(*(mario + ((*k) / 5)), xM, yM, 0);
+            }
             al_flip_display();
         }
     }
 }
 
-int dentroLimite(int direccion){
-    if ((xM >= 4.0 && !direccion) || (xM <= 860.0 && direccion)){
-        if (direccion && yM == 430 && xM > 817){
-            printf("GAME OVER\n");
-            return 0;
+int dentroLimite(){
+    if (yM == 430 && xM > 817){
+        if (vivo) {
+            vivo = 0;
+            finalMuerto = 480.0;
+            CreateThread(NULL, 0, morir, NULL, 0, 0);
+            return -1;
         }
-        if (!direccion && yM == 354 && xM < 47){
-            printf("GAME OVER\n");
-            return 0;
-        }
-        if (direccion && yM == 274 && xM > 817){
-            printf("GAME OVER\n");
-            return 0;
-        }
-        if (!direccion && yM == 198 && xM < 47){
-            printf("GAME OVER\n");
-            return 0;
-        }
-        if (direccion && yM == 118 && xM > 817){
-            printf("GAME OVER\n");
-            return 0;
-        }
-        if (yM == 40 && ((!direccion && xM < 335) || (direccion && xM > 529))){
-            printf("GAME OVER\n");
-            return 0;
-        }
-        return 1;
+        return 0;
     }
+    if (yM == 354 && xM < 47){
+        if (vivo) {
+            vivo = 0;
+            finalMuerto = 404.0;
+            CreateThread(NULL, 0, morir, NULL, 0, 0);
+            return -1;
+        }
+        return 0;
+    }
+    if (yM == 274 && xM > 817){
+        if (vivo) {
+            vivo = 0;
+            finalMuerto = 328.0;
+            CreateThread(NULL, 0, morir, NULL, 0, 0);
+            return -1;
+        }
+        return 0;
+    }
+    if (yM == 198 && xM < 47){
+        if (vivo) {
+            vivo = 0;
+            finalMuerto = 248.0;
+            CreateThread(NULL, 0, morir, NULL, 0, 0);
+            return -1;
+        }
+        return 0;
+    }
+    if (yM == 118 && xM > 817){
+        if (vivo) {
+            vivo = 0;
+            finalMuerto = 178.0;
+            CreateThread(NULL, 0, morir, NULL, 0, 0);
+            return -1;
+        }
+        return 0;
+    }
+    if (yM == 40 && xM < 335){
+        if (vivo) {
+            vivo = 0;
+            finalMuerto = 104.0;
+            CreateThread(NULL, 0, morir, NULL, 0, 0);
+            return -1;
+        }
+        return 0;
+    }
+    if (yM == 40 && xM > 529){
+        if (vivo) {
+            vivo = 0;
+            finalMuerto = 108.0;
+            CreateThread(NULL, 0, morir, NULL, 0, 0);
+            return -1;
+        }
+        return 0;
+    }
+    return 1;
+}
+
+DWORD WINAPI morir(){
+    posicionMuerto = yM;
+    muertoID = 0;
+    for (int i = 0; posicionMuerto < finalMuerto; i++){
+        muertoID++;
+        if (muertoID == 4){
+            muertoID = 0;
+        }
+        posicionMuerto += 4.0;
+        redraw = true;
+        Sleep(75);
+    }
+    posicionMuerto = finalMuerto;
+    yM = posicionMuerto;
+    //printf("^^^ %f %f %f ^^^\n",yM,posicionMuerto,finalMuerto);
+    Sleep(75);
+    redraw = true;
     return 0;
 }
 

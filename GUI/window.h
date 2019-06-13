@@ -17,6 +17,8 @@ ALLEGRO_BITMAP* escalera;
 ALLEGRO_BITMAP* marioX[3];
 ALLEGRO_BITMAP* marioY[3];
 ALLEGRO_BITMAP* marioZ[2];
+ALLEGRO_BITMAP* marioM[5];
+ALLEGRO_BITMAP** mario;
 float nivelPiso;
 
 bool key[4];
@@ -28,8 +30,13 @@ float salto;
 int subiendo_escalera;
 int countKeys();
 int saltando;
+int vivo;
+DWORD WINAPI morir();
+float posicionMuerto;
+float finalMuerto;
+int muertoID;
 
-int dentroLimite(int direccion);
+int dentroLimite();
 int hay_escaleras(int arriba);
 DWORD WINAPI saltar();
 int obtenerPiso(float x);
