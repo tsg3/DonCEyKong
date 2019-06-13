@@ -2,6 +2,7 @@
 #define DONCEYKONGUSER_WINDOW_H
 
 #include "allegro5/allegro.h"
+#include "listaBarriles.h"
 
 ALLEGRO_DISPLAY *display;
 ALLEGRO_EVENT_QUEUE *event_queue;
@@ -18,6 +19,15 @@ ALLEGRO_BITMAP* marioX[3];
 ALLEGRO_BITMAP* marioY[3];
 ALLEGRO_BITMAP* marioZ[2];
 ALLEGRO_BITMAP* marioM[5];
+
+
+ALLEGRO_BITMAP* barrilV[4];
+DWORD WINAPI barrilThread(void* barril);
+void movimientoBarril(BarrilL* barril_actual, float x, float y, float mov);
+void actualizarBarriles(BarrilL* barril_actual);
+int choque();
+DWORD WINAPI muerteChoque();
+
 ALLEGRO_BITMAP** mario;
 float nivelPiso;
 
@@ -39,7 +49,7 @@ int muertoID;
 int dentroLimite();
 int hay_escaleras(int arriba);
 DWORD WINAPI saltar();
-int obtenerPiso(float x);
+int obtenerPiso(float x, float nivel);
 int initialize();
 void finishExecution();
 void reading();

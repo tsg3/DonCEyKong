@@ -75,6 +75,10 @@ int initialize(){
     marioM[2] = createImage("jumpman_rodando","jumpman_rodando_sprite_2.png");
     marioM[3] = createImage("jumpman_rodando","jumpman_rodando_sprite_3.png");
     marioM[4] = createImage("jumpman_muerto","Jumpman_muerto_sprite_0.png");
+    barrilV[0] = createImage("barril","barril_sprite_0.png");
+    barrilV[1] = createImage("barril","barril_sprite_1.png");
+    barrilV[2] = createImage("barril","barril_sprite_2.png");
+    barrilV[3] = createImage("barril","barril_sprite_3.png");
     escalera = createImage("estructuras","escalera_sprite_0.png");
     xM = 40;
     yM = nivelPiso;
@@ -82,7 +86,8 @@ int initialize(){
 
 
     if(!image || !image2 || !martillo || !gasolina || !escalera || !marioX[0] || !marioX[1]
-    || !marioX[2] || !marioY[0] || !marioY[1] || !marioY[2] || !marioZ[0] || !marioZ[1] || !marioM[0] || !marioM[1] || !marioM[2] || !marioM[3]) {
+    || !marioX[2] || !marioY[0] || !marioY[1] || !marioY[2] || !marioZ[0] || !marioZ[1] || !marioM[0] || !marioM[1]
+    || !marioM[2] || !marioM[3] || !marioM[4] || !barrilV[0] || !barrilV[1] || !barrilV[2] || !barrilV[3]) {
         al_show_native_message_box(display, "Error", "Error", "Failed to load image!",
                                    NULL, ALLEGRO_MESSAGEBOX_ERROR);
         al_destroy_display(display);
@@ -117,6 +122,19 @@ void finishExecution(){
     al_destroy_bitmap(marioY[0]);
     al_destroy_bitmap(marioY[1]);
     al_destroy_bitmap(marioY[2]);
+
+    al_destroy_bitmap(marioZ[0]);
+    al_destroy_bitmap(marioZ[1]);
+    al_destroy_bitmap(marioM[0]);
+    al_destroy_bitmap(marioM[1]);
+    al_destroy_bitmap(marioM[2]);
+    al_destroy_bitmap(marioM[3]);
+    al_destroy_bitmap(marioM[4]);
+    al_destroy_bitmap(barrilV[0]);
+    al_destroy_bitmap(barrilV[1]);
+    al_destroy_bitmap(barrilV[2]);
+    al_destroy_bitmap(barrilV[3]);
+
     al_destroy_timer(timer);
     al_destroy_event_queue(event_queue);
 }
@@ -131,6 +149,8 @@ void reading(){
         ALLEGRO_EVENT ev;
         al_wait_for_event(event_queue, &ev);
         if (dentroLimite() == -1){
+        }
+        else if (choque() == -1){
         }
         else if(ev.type == ALLEGRO_EVENT_TIMER) {
             if(countKeys()==1) {
@@ -149,12 +169,18 @@ void reading(){
                 if (key[KEY_LEFT] && xM >= 4.0 && !subiendo_escalera && vivo) {
                     xM -= 2.0;
                     i++;
+                    if (saltando == 1){
+                        i = 10;
+                    }
                     mario = marioY;
                     k = &i;
                 }
                 if (key[KEY_RIGHT] && xM <= 860.0 && !subiendo_escalera && vivo) {
                     xM += 2.0;
                     i++;
+                    if (saltando == 1){
+                        i = 10;
+                    }
                     mario = marioX;
                     k = &i;
                 }
@@ -191,6 +217,10 @@ void reading(){
                         CreateThread(NULL, 0, saltar, NULL, 0, 0);
                     }
                     break;
+                case ALLEGRO_KEY_B:
+                    nuevoBarril();
+                    CreateThread(NULL, 0, barrilThread, ultimo(), 0, 0);
+                    break;
             }
         }
         else if(ev.type == ALLEGRO_EVENT_KEY_UP) {
@@ -209,6 +239,7 @@ void reading(){
                     break;
             }
         }
+        //printf("redraw = %d\n",redraw);
         if(redraw && al_is_event_queue_empty(event_queue)) {
             redraw = false;
             al_clear_to_color(al_map_rgb(0,0,0));
@@ -217,9 +248,13 @@ void reading(){
             gasolina_inicial(gasolina);
             escaleras(escalera);
             platforms(image);
-            yM = nivelPiso - obtenerPiso(xM) - salto;
+            yM = nivelPiso - obtenerPiso(xM,nivelPiso) - salto;
+
+            if(hay_barril_ > 0){
+                actualizarBarriles(lista_barriles);
+            }
+
             if (!vivo) {
-                //printf("y %f   p %f   f %f   m %d\n",yM, posicionMuerto,finalMuerto,muertoID);
                 if (posicionMuerto == finalMuerto){
                     muertoID = 4;
                     vivo = 1;
@@ -229,13 +264,138 @@ void reading(){
                     xM = 40.0;
                     yM = 494.0;
                     nivelPiso = 494.0;
+                    while(hay_barril_ > 0){
+                        eliminarBarril();
+                    }
+                    //printf("FIN\n");
                 }
             }
             else{
+                if (*k > 14){
+                    *k = 0;
+                }
                 al_draw_bitmap(*(mario + ((*k) / 5)), xM, yM, 0);
             }
             al_flip_display();
         }
+    }
+}
+
+int choque(){
+    if (!hay_barril_ || !vivo)
+    {
+        return 0;
+    }
+    BarrilL* temp = lista_barriles;
+    while(temp != NULL) {
+        if (temp->barril_x == xM && temp->barril_y == yM) {
+            if (vivo) {
+                vivo = 0;
+                CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
+                return -1;
+            }
+        }
+        else{
+            temp = temp->siguiente;
+        }
+    }
+    return 0;
+}
+
+void actualizarBarriles(BarrilL* barril_actual){
+    if (barril_actual->barril_id > 31){
+        barril_actual->barril_id = 0;
+    }
+    al_draw_bitmap(barrilV[barril_actual->barril_id/8], barril_actual->barril_x, barril_actual->barril_y, 0);
+    barril_actual->barril_id++;
+    if (barril_actual->siguiente != NULL){
+        actualizarBarriles(barril_actual->siguiente);
+    }
+    if (barril_actual->barril_x <= 0){
+        eliminarBarril();
+    }
+}
+
+DWORD WINAPI barrilThread(void* barril){
+    if (!vivo){
+        redraw = true;
+        return 0;
+    }
+    BarrilL *barril_actual = (BarrilL *) barril;
+    redraw = true;
+    Sleep(20);
+    movimientoBarril(barril_actual, 818.0, 172.0, 2.0);
+    if (!vivo){
+        redraw = true;
+        return 0;
+    }
+    barril_actual->barril_nivel_piso = 258.0;
+    movimientoBarril(barril_actual, 46.0, 248.0, -2.0);
+    if (!vivo){
+        redraw = true;
+        return 0;
+    }
+    barril_actual->barril_nivel_piso = 316.0;
+    movimientoBarril(barril_actual, 818.0, 328.0, 2.0);
+    if (!vivo){
+        redraw = true;
+        return 0;
+    }
+    barril_actual->barril_nivel_piso = 378.0;
+    movimientoBarril(barril_actual, 46.0, 404.0, -2.0);
+    if (!vivo){
+        redraw = true;
+        return 0;
+    }
+    barril_actual->barril_nivel_piso = 436.0;
+    movimientoBarril(barril_actual, 818.0, 480.0, 2.0);
+    if (!vivo){
+        redraw = true;
+        return 0;
+    }
+    barril_actual->barril_nivel_piso = 494.0;
+    while (barril_actual->barril_x > 0.0){
+        if (!vivo){
+            redraw = true;
+            return 0;
+        }
+        barril_actual->barril_x += -2.0;
+        barril_actual->barril_y = barril_actual->barril_nivel_piso - obtenerPiso(barril_actual->barril_x,barril_actual->barril_nivel_piso);
+        redraw = true;
+        Sleep(20);
+    }
+    redraw = true;
+    return 0;
+}
+
+void movimientoBarril(BarrilL* barril_actual, float x, float y, float mov){
+    while ((barril_actual->barril_x < x && mov > 0.0) || (barril_actual->barril_x > x && mov < 0.0)){
+        if (!vivo){
+            redraw = true;
+            return;
+        }
+        barril_actual->barril_x += mov;
+        barril_actual->barril_y = barril_actual->barril_nivel_piso - obtenerPiso(barril_actual->barril_x,barril_actual->barril_nivel_piso);
+        redraw = true;
+        Sleep(20);
+    }
+    for (int i = 0; barril_actual->barril_y < y; i++){
+        if (!vivo){
+            redraw = true;
+            return;
+        }
+        barril_actual->barril_y += abs((int)mov);
+        redraw = true;
+        Sleep(20);
+    }
+    if (barril_actual->barril_y != y) {
+        if (!vivo){
+            redraw = true;
+            return;
+        }
+        barril_actual->barril_y = y;
+        redraw = true;
+        Sleep(20);
     }
 }
 
@@ -279,7 +439,7 @@ int dentroLimite(){
     if (yM == 118 && xM > 817){
         if (vivo) {
             vivo = 0;
-            finalMuerto = 178.0;
+            finalMuerto = 172.0;
             CreateThread(NULL, 0, morir, NULL, 0, 0);
             return -1;
         }
@@ -318,11 +478,31 @@ DWORD WINAPI morir(){
         redraw = true;
         Sleep(75);
     }
-    posicionMuerto = finalMuerto;
-    yM = posicionMuerto;
+    if (posicionMuerto != finalMuerto) {
+        posicionMuerto = finalMuerto;
+        yM = posicionMuerto;
+        redraw = true;
+        Sleep(75);
+    }
     //printf("^^^ %f %f %f ^^^\n",yM,posicionMuerto,finalMuerto);
-    Sleep(75);
+    return 0;
+}
+
+DWORD WINAPI muerteChoque(){
+    posicionMuerto = yM;
+    finalMuerto = posicionMuerto+1;
+    muertoID = 0;
+    for (int i = 0; i < 30; i++){
+        muertoID++;
+        if (muertoID == 4){
+            muertoID = 0;
+        }
+        redraw = true;
+        Sleep(75);
+    }
+    finalMuerto = posicionMuerto;
     redraw = true;
+    Sleep(750);
     return 0;
 }
 
@@ -331,15 +511,15 @@ DWORD WINAPI saltar()
     saltando = 1;
     int i;
     for(i = 0; i < 11; i++){
-        Sleep(40);
         salto = i*3;
         redraw = true;
+        Sleep(40);
     }
     Sleep(100);
     for(; i >= 0; i--){
-        Sleep(40);
         salto = i*3;
         redraw = true;
+        Sleep(40);
     }
     saltando = 0;
     return 0;
@@ -423,11 +603,11 @@ int hay_escaleras(int arriba){
     return 0;
 }
 
-int obtenerPiso(float x){
+int obtenerPiso(float x, float nivel){
     int nx = 0;
     int i = 0;
     int j;
-    if (nivelPiso > 436) {
+    if (nivel > 436) {
         while (x > 432 + (i * 64)) {
             if (x <= 432 + ((i + 1) * 64)) {
                 nx = 2 * i + 2;
@@ -436,7 +616,7 @@ int obtenerPiso(float x){
             i++;
         }
     }
-    else if (nivelPiso > 378){
+    else if (nivel > 378){
         nx = 10;
         j = 11;
         while (x > -16 + (i * 64)) {
@@ -448,7 +628,7 @@ int obtenerPiso(float x){
             i++;
         }
     }
-    else if (nivelPiso > 316){
+    else if (nivel > 316){
         nx = 28;
         j = -2;
         while (x > -16 + (i * 64)) {
@@ -460,7 +640,7 @@ int obtenerPiso(float x){
             i++;
         }
     }
-    else if (nivelPiso > 258){
+    else if (nivel > 258){
         nx = 46;
         j = 11;
         while (x > -16 + (i * 64)) {
@@ -472,7 +652,7 @@ int obtenerPiso(float x){
             i++;
         }
     }
-    else if (nivelPiso > 196){
+    else if (nivel > 196){
         nx = 64;
         j = -2;
         while (x > -16 + (i * 64)) {
@@ -484,7 +664,7 @@ int obtenerPiso(float x){
             i++;
         }
     }
-    else if (nivelPiso > 128){
+    else if (nivel > 128){
         nx = 82;
         if (x <= 432){
             return 92;

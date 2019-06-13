@@ -108,8 +108,8 @@ void nuevaConexion(fd_set readfds, char* message){
 
         printf("New connection , socket fd is %d , ip is : %s , port : %d \n" , comm_socket , inet_ntoa(client.sin_addr) , ntohs, (client.sin_port));
 
-        if( send(comm_socket, message, strlen(message), 0) != strlen(message) )
-        {
+            if( send(comm_socket, message, strlen(message), 0) != strlen(message) )
+            {
             perror("send");
         }
 
@@ -133,23 +133,23 @@ void estadoDeClientes(fd_set readfds){
     {
         sd = clientes[i];
         if (FD_ISSET( sd , &readfds))
-        {
-            valread = recv( clientes[i] , RecvBuff, sizeof(RecvBuff), 0);
-            if (strcmp(RecvBuff, ":exit") == 0) {
-                getpeername(clientes[i], (struct sockaddr *) &client, (socklen_t *) &stsize);
-                printf("Host disconnected , ip %s , port %d \n",
-                       inet_ntoa(client.sin_addr), ntohs(client.sin_port));
-                close(clientes[i]);
-                clientes[i] = 0;
-                printf("Closed\n");
-            }
-            else {
-                printf("Client: %s\n", RecvBuff);
-                strcpy(SendBuff, "Hola\0");
-                send(clientes[i], SendBuff, sizeof(SendBuff), 0);
-                printf("Datos enviados: %s \n", SendBuff);
-                memset(SendBuff, 0, 512);
-                memset(RecvBuff, 0, 512);
+                {
+                    valread = recv( clientes[i] , RecvBuff, sizeof(RecvBuff), 0);
+                    if (strcmp(RecvBuff, ":exit") == 0) {
+                        getpeername(clientes[i], (struct sockaddr *) &client, (socklen_t *) &stsize);
+                        printf("Host disconnected , ip %s , port %d \n",
+                               inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+                        close(clientes[i]);
+                        clientes[i] = 0;
+                        printf("Closed\n");
+                    }
+                    else {
+                        printf("Client: %s\n", RecvBuff);
+                        strcpy(SendBuff, "Hola\0");
+                        send(clientes[i], SendBuff, sizeof(SendBuff), 0);
+                        printf("Datos enviados: %s \n", SendBuff);
+                        memset(SendBuff, 0, 512);
+                        memset(RecvBuff, 0, 512);
             }
         }
     }
