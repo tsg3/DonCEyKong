@@ -3,6 +3,7 @@
 
 #include "allegro5/allegro.h"
 #include "listaBarriles.h"
+#include "listaBarrilesVerticales.h"
 
 ALLEGRO_DISPLAY *display;
 ALLEGRO_EVENT_QUEUE *event_queue;
@@ -27,6 +28,15 @@ void movimientoBarril(BarrilL* barril_actual, float x, float y, float mov);
 void actualizarBarriles(BarrilL* barril_actual);
 int choque();
 DWORD WINAPI muerteChoque();
+int colision(float i1x, float i1y, float d1x, float d1y, float i2x, float i2y, float d2x, float d2y);
+int random;
+
+ALLEGRO_BITMAP* barrilVertical[2];
+DWORD WINAPI barrilVerticalThread(void* BarrilV);
+void movimientobarrilVertical(BarrilVertical* barril_actual, float y, float mov);
+void actualizarBarrilesVerticales(BarrilVertical* barril_actual);
+
+
 
 ALLEGRO_BITMAP** mario;
 float nivelPiso;

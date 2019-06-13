@@ -2,6 +2,7 @@
 #include "allegro5/allegro.h"
 #include "allegro5/allegro_image.h"
 #include "allegro5/allegro_native_dialog.h"
+#include <time.h>
 
 #include "window.h"
 
@@ -21,6 +22,7 @@ float salto = 0.0;
 int subiendo_escalera = 0;
 int saltando = 0;
 int vivo = 1;
+int random = 1;
 
 int initialize(){
     if(!al_init()) {
@@ -79,6 +81,8 @@ int initialize(){
     barrilV[1] = createImage("barril","barril_sprite_1.png");
     barrilV[2] = createImage("barril","barril_sprite_2.png");
     barrilV[3] = createImage("barril","barril_sprite_3.png");
+    barrilVertical[0] = createImage("barril","barril_sprite_4.png");
+    barrilVertical[1] = createImage("barril","barril_sprite_5.png");
     escalera = createImage("estructuras","escalera_sprite_0.png");
     xM = 40;
     yM = nivelPiso;
@@ -87,7 +91,8 @@ int initialize(){
 
     if(!image || !image2 || !martillo || !gasolina || !escalera || !marioX[0] || !marioX[1]
     || !marioX[2] || !marioY[0] || !marioY[1] || !marioY[2] || !marioZ[0] || !marioZ[1] || !marioM[0] || !marioM[1]
-    || !marioM[2] || !marioM[3] || !marioM[4] || !barrilV[0] || !barrilV[1] || !barrilV[2] || !barrilV[3]) {
+    || !marioM[2] || !marioM[3] || !marioM[4] || !barrilV[0] || !barrilV[1] || !barrilV[2] || !barrilV[3]
+    || !barrilVertical[0] || !barrilVertical[1]) {
         al_show_native_message_box(display, "Error", "Error", "Failed to load image!",
                                    NULL, ALLEGRO_MESSAGEBOX_ERROR);
         al_destroy_display(display);
@@ -146,6 +151,10 @@ void reading(){
     mario = marioX;
     while(1)
     {
+        random++;
+        if(random>27){
+            random = 1;
+        }
         ALLEGRO_EVENT ev;
         al_wait_for_event(event_queue, &ev);
         if (dentroLimite() == -1){
@@ -170,7 +179,7 @@ void reading(){
                     xM -= 2.0;
                     i++;
                     if (saltando == 1){
-                        i = 10;
+                        i = 6;
                     }
                     mario = marioY;
                     k = &i;
@@ -179,13 +188,13 @@ void reading(){
                     xM += 2.0;
                     i++;
                     if (saltando == 1){
-                        i = 10;
+                        i = 6;
                     }
                     mario = marioX;
                     k = &i;
                 }
                 redraw = true;
-                if (i > 14) {
+                if (i > 8) {
                     i = 0;
                 }
                 if (j > 9){
@@ -221,6 +230,10 @@ void reading(){
                     nuevoBarril();
                     CreateThread(NULL, 0, barrilThread, ultimo(), 0, 0);
                     break;
+                case ALLEGRO_KEY_V:
+                    nuevoBarrilVertical();
+                    CreateThread(NULL, 0, barrilVerticalThread, ultimoBarrilVertical(), 0, 0);
+                    break;
             }
         }
         else if(ev.type == ALLEGRO_EVENT_KEY_UP) {
@@ -253,6 +266,10 @@ void reading(){
             if(hay_barril_ > 0){
                 actualizarBarriles(lista_barriles);
             }
+            if(hay_barril_vertical > 0){
+                //printf("1---> %f %f\n",lista_barriles_verticales->barril_x,lista_barriles_verticales->barril_y);
+                actualizarBarrilesVerticales(lista_barriles_verticales);
+            }
 
             if (!vivo) {
                 if (posicionMuerto == finalMuerto){
@@ -267,28 +284,117 @@ void reading(){
                     while(hay_barril_ > 0){
                         eliminarBarril();
                     }
+                    while(hay_barril_vertical > 0){
+                        eliminarBarrilVertical();
+                    }
                     //printf("FIN\n");
                 }
             }
             else{
-                if (*k > 14){
-                    *k = 0;
+                if (k == &i) {
+                    al_draw_bitmap(*(mario + ((*k) / 3)), xM, yM, 0);
                 }
-                al_draw_bitmap(*(mario + ((*k) / 5)), xM, yM, 0);
+                else{
+                    al_draw_bitmap(*(mario + ((*k) / 5)), xM, yM, 0);
+                }
             }
             al_flip_display();
         }
     }
 }
 
+DWORD WINAPI barrilVerticalThread(void* BarrilV){
+    BarrilVertical *barril_actual = (BarrilVertical *) BarrilV;
+    float newX = (float) random * 32.0;
+    if (newX > barril_actual->barril_x){
+        while (barril_actual->barril_x < newX){
+            if (!vivo){
+                redraw = true;
+                return 0;
+            }
+            barril_actual->barril_x += 2.0;
+            barril_actual->barril_y = barril_actual->barril_nivel_piso - obtenerPiso(barril_actual->barril_x,barril_actual->barril_nivel_piso);
+            redraw = true;
+            Sleep(20);
+        }
+    }
+    barril_actual->barril_x = newX;
+    barril_actual->barril_y = barril_actual->barril_nivel_piso - obtenerPiso(barril_actual->barril_x,barril_actual->barril_nivel_piso);
+    redraw = true;
+    Sleep(20);
+    if (!vivo){
+        redraw = true;
+        return 0;
+    }
+    movimientobarrilVertical(barril_actual,494.0-obtenerPiso(barril_actual->barril_x,494.0),2.0);
+    if (!vivo){
+        redraw = true;
+        return 0;
+    }
+    barril_actual->barril_nivel_piso = 494.0;
+    while (barril_actual->barril_x > 0.0){
+        if (!vivo){
+            redraw = true;
+            return 0;
+        }
+        barril_actual->barril_x += -2.0;
+        barril_actual->barril_y = barril_actual->barril_nivel_piso - obtenerPiso(barril_actual->barril_x,barril_actual->barril_nivel_piso);
+        redraw = true;
+        Sleep(20);
+    }
+    redraw = true;
+    return 0;
+}
+
+void movimientobarrilVertical(BarrilVertical* barril_actual, float y, float mov){
+    for (int i = 0; barril_actual->barril_y < y; i++){
+        if (!vivo){
+            redraw = true;
+            return;
+        }
+        barril_actual->barril_y += mov;
+        redraw = true;
+        Sleep(20);
+    }
+    if (barril_actual->barril_y != y) {
+        if (!vivo){
+            redraw = true;
+            return;
+        }
+        barril_actual->barril_y = y;
+        redraw = true;
+        Sleep(20);
+    }
+}
+
+void actualizarBarrilesVerticales(BarrilVertical* barril_actual){
+    if (barril_actual->barril_id > 31){
+        barril_actual->barril_id = 0;
+    }
+    int id = (barril_actual->barril_id)/16;
+    ALLEGRO_BITMAP** images = barrilVertical;
+    if (barril_actual->barril_nivel_piso == 494.0 || barril_actual->barril_y == 196.0 - obtenerPiso(barril_actual->barril_x,196.0)){
+        id = (barril_actual->barril_id)/8;
+        images = barrilV;
+    }
+    al_draw_bitmap(*(images+id), barril_actual->barril_x, barril_actual->barril_y, 0);
+    barril_actual->barril_id++;
+    if (barril_actual->siguiente != NULL){
+        actualizarBarrilesVerticales(barril_actual->siguiente);
+    }
+    if (barril_actual->barril_x <= 0){
+        eliminarUnBarrilVertical();
+    }
+}
+
 int choque(){
-    if (!hay_barril_ || !vivo)
+    if ((!hay_barril_ && !hay_barril_vertical) || !vivo )
     {
         return 0;
     }
     BarrilL* temp = lista_barriles;
-    while(temp != NULL) {
-        if (temp->barril_x == xM && temp->barril_y == yM) {
+    while(temp != NULL && hay_barril_) {
+        if (colision(xM+8.0, yM, xM+22.0, yM+30.0, temp->barril_x+4.0, temp->barril_y+12.0, temp->barril_x+26.0, temp->barril_y+30.0)) {
             if (vivo) {
                 vivo = 0;
                 CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
@@ -299,7 +405,41 @@ int choque(){
             temp = temp->siguiente;
         }
     }
+    BarrilVertical *temp2 = lista_barriles_verticales;
+    while(temp2 != NULL && hay_barril_vertical) {
+        if (temp2->barril_nivel_piso == 494.0 || temp2->barril_y == 196.0 - obtenerPiso(temp2->barril_x,196.0)) {
+            if (colision(xM + 8.0, yM, xM + 22.0, yM + 30.0, temp2->barril_x + 4.0, temp2->barril_y + 12.0,
+                         temp2->barril_x + 26.0, temp2->barril_y + 30.0)) {
+                if (vivo) {
+                    vivo = 0;
+                    CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
+                    return -1;
+                }
+            } else {
+                temp2 = temp2->siguiente;
+            }
+        }
+        else{
+            if (colision(xM + 8.0, yM, xM + 22.0, yM + 30.0, temp2->barril_x + 0.0, temp2->barril_y + 12.0,
+                         temp2->barril_x + 30.0 , temp2->barril_y + 30.0)) {
+                if (vivo) {
+                    vivo = 0;
+                    CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
+                    return -1;
+                }
+            } else {
+                temp2 = temp2->siguiente;
+            }
+        }
+    }
     return 0;
+}
+
+int colision(float i1x, float i1y, float d1x, float d1y, float i2x, float i2y, float d2x, float d2y)
+{
+    if (i1x > d2x || i2x > d1x || d1y < i2y || d2y < i1y)
+        return false;
+    return 1;
 }
 
 void actualizarBarriles(BarrilL* barril_actual){
