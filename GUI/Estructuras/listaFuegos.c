@@ -16,6 +16,7 @@ void nuevoFuego(){
         fuegos->y = 494.0;
         fuegos->nivelPiso = 494.0;
         fuegos->id = 0;
+        fuegos->direccion = 1;
         fuegos->siguiente = NULL;
     } else{
         FuegoE *temp = fuegos;
@@ -27,6 +28,7 @@ void nuevoFuego(){
         nuevo_fuego->y = 494.0;
         nuevo_fuego->nivelPiso = 494.0;
         nuevo_fuego->id = 0;
+        nuevo_fuego->direccion = 1;
         nuevo_fuego->siguiente = NULL;
         temp->siguiente = nuevo_fuego;
     }

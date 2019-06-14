@@ -12,6 +12,7 @@ typedef struct FuegoE{
     float y;
     float nivelPiso;
     int id;
+    int direccion;
     struct FuegoE *siguiente;
 } FuegoE;
 

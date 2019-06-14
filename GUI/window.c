@@ -412,6 +412,7 @@ DWORD WINAPI fuegoThread(void* fuego){
         else{
             int x = xM;
             if (fuego_actual->x < x){
+                fuego_actual->direccion = 1;
                 for (; fuego_actual->x < x; fuego_actual->x += 2.0){
                     if (!vivo){
                         redraw = true;
@@ -423,6 +424,7 @@ DWORD WINAPI fuegoThread(void* fuego){
                 }
             }
             else if (fuego_actual->x > x){
+                fuego_actual->direccion = 0;
                 for (; fuego_actual->x > x; fuego_actual->x -= 2.0) {
                     if (!vivo){
                         redraw = true;
@@ -607,6 +609,7 @@ void moverFuegoEscalera(FuegoE* fuego_actual, float x, float mov){
         if (mov < 0.0){
             mov *= -1.0;
         }
+        fuego_actual->direccion = 1;
         for (; fuego_actual->x < x; fuego_actual->x += mov) {
             if (!vivo){
                 redraw = true;
@@ -621,6 +624,7 @@ void moverFuegoEscalera(FuegoE* fuego_actual, float x, float mov){
         if (mov > 0.0){
             mov *= -1.0;
         }
+        fuego_actual->direccion = 0;
         for (; fuego_actual->x > x; fuego_actual->x += mov) {
             if (!vivo){
                 redraw = true;
@@ -649,7 +653,7 @@ void actualizarFuegos(FuegoE* fuego_actual){
     if (fuego_actual->id > 31){
         fuego_actual->id = 0;
     }
-    int id = (fuego_actual->id)/16;
+    int id = (fuego_actual->id)/16 + 2 * fuego_actual->direccion;
     al_draw_bitmap(fuegoI[id], fuego_actual->x, fuego_actual->y, 0);
     fuego_actual->id++;
     if (fuego_actual->siguiente != NULL){
@@ -672,17 +676,23 @@ DWORD WINAPI animacionGasolina(){
 
 DWORD WINAPI barrilMixtoThread(void* BarrilM){
     BarrilMixto *barril_actual = (BarrilMixto *) BarrilM;
+    barril_actual->direccion = 1;
     movimientoBarrilMixto(barril_actual,818.0,172.0,2.0,2.0);
     barril_actual->barril_nivel_piso = 258.0;
+    barril_actual->direccion = 0;
     movimientoBarrilMixto(barril_actual,46.0,248.0,-2.0,2.0);
     barril_actual->barril_nivel_piso = 316.0;
+    barril_actual->direccion = 1;
     movimientoBarrilMixto(barril_actual,818.0,328.0,2.0,2.0);
     barril_actual->barril_nivel_piso = 378.0;
+    barril_actual->direccion = 0;
     movimientoBarrilMixto(barril_actual,46.0,404.0,-2.0,2.0);
     barril_actual->barril_nivel_piso = 436.0;
+    barril_actual->direccion = 1;
     movimientoBarrilMixto(barril_actual,818.0,480.0,2.0,2.0);
     barril_actual->barril_nivel_piso = 494.0;
     barril_actual->en_plataforma = 1;
+    barril_actual->direccion = 0;
     while (barril_actual->barril_x > 0.0){
         if (!vivo){
             redraw = true;
@@ -725,15 +735,16 @@ int movimientoHorizontalBarrilMixto(BarrilMixto* barril_actual, float x, float m
             redraw = true;
             return 0;
         }
-        if (barril_actual->barril_x == escaleras_rangos[barril_actual->despues_escalera]->x && barril_actual->barril_y == escaleras_rangos[barril_actual->despues_escalera]->arriba_y)
-        {
-            if (random > 13) {
-                result = escaleras_rangos[barril_actual->despues_escalera]->abajo_y;
-                barril_actual->despues_escalera = escaleras_rangos[barril_actual->despues_escalera]->siguiente;
-                break;
-            }
-            else{
-                barril_actual->despues_escalera++;
+        if (barril_actual->despues_escalera < 12) {
+            if (barril_actual->barril_x == escaleras_rangos[barril_actual->despues_escalera]->x &&
+                barril_actual->barril_y == escaleras_rangos[barril_actual->despues_escalera]->arriba_y) {
+                if (random > 13) {
+                    result = escaleras_rangos[barril_actual->despues_escalera]->abajo_y;
+                    barril_actual->despues_escalera = escaleras_rangos[barril_actual->despues_escalera]->siguiente;
+                    break;
+                } else {
+                    barril_actual->despues_escalera++;
+                }
             }
         }
         barril_actual->barril_x += mov;
@@ -765,6 +776,9 @@ void actualizarBarrilesMixto(BarrilMixto* barril_actual){
     if (barril_actual->en_plataforma){
         id = (barril_actual->barril_id)/8;
         images = barrilV;
+        if (barril_actual->direccion == 0){
+            id = -1 * id + 3;
+        }
     }
     al_draw_bitmap(*(images+id), barril_actual->barril_x, barril_actual->barril_y, 0);
     barril_actual->barril_id++;
@@ -805,6 +819,7 @@ DWORD WINAPI barrilVerticalThread(void* BarrilV){
         return 0;
     }
     barril_actual->barril_nivel_piso = 494.0;
+    barril_actual->direccion = 0;
     while (barril_actual->barril_x > 0.0){
         if (!vivo){
             redraw = true;
@@ -849,6 +864,9 @@ void actualizarBarrilesVerticales(BarrilVertical* barril_actual){
     if (barril_actual->barril_nivel_piso == 494.0 || barril_actual->barril_y == 196.0 - obtenerPiso(barril_actual->barril_x,196.0)){
         id = (barril_actual->barril_id)/8;
         images = barrilV;
+        if (barril_actual->direccion == 0){
+            id = -1 * id + 3;
+        }
     }
     al_draw_bitmap(*(images+id), barril_actual->barril_x, barril_actual->barril_y, 0);
     barril_actual->barril_id++;
@@ -959,7 +977,11 @@ void actualizarBarriles(BarrilL* barril_actual){
     if (barril_actual->barril_id > 31){
         barril_actual->barril_id = 0;
     }
-    al_draw_bitmap(barrilV[barril_actual->barril_id/8], barril_actual->barril_x, barril_actual->barril_y, 0);
+    int id = barril_actual->barril_id/8;
+    if (barril_actual->direccion == 0){
+        id = -1 * id + 3;
+    }
+    al_draw_bitmap(barrilV[id], barril_actual->barril_x, barril_actual->barril_y, 0);
     barril_actual->barril_id++;
     if (barril_actual->siguiente != NULL){
         actualizarBarriles(barril_actual->siguiente);
@@ -983,30 +1005,35 @@ DWORD WINAPI barrilThread(void* barril){
         return 0;
     }
     barril_actual->barril_nivel_piso = 258.0;
+    barril_actual->direccion = 0;
     movimientoBarril(barril_actual, 46.0, 248.0, -2.0);
     if (!vivo){
         redraw = true;
         return 0;
     }
     barril_actual->barril_nivel_piso = 316.0;
+    barril_actual->direccion = 1;
     movimientoBarril(barril_actual, 818.0, 328.0, 2.0);
     if (!vivo){
         redraw = true;
         return 0;
     }
     barril_actual->barril_nivel_piso = 378.0;
+    barril_actual->direccion = 0;
     movimientoBarril(barril_actual, 46.0, 404.0, -2.0);
     if (!vivo){
         redraw = true;
         return 0;
     }
     barril_actual->barril_nivel_piso = 436.0;
+    barril_actual->direccion = 1;
     movimientoBarril(barril_actual, 818.0, 480.0, 2.0);
     if (!vivo){
         redraw = true;
         return 0;
     }
     barril_actual->barril_nivel_piso = 494.0;
+    barril_actual->direccion = 0;
     while (barril_actual->barril_x > 0.0){
         if (!vivo){
             redraw = true;

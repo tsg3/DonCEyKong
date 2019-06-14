@@ -16,6 +16,7 @@ void nuevoBarrilVertical(){
         lista_barriles_verticales->barril_y = 104.0;
         lista_barriles_verticales->barril_nivel_piso = 196.0;
         lista_barriles_verticales->barril_id = 0;
+        lista_barriles_verticales->direccion = 1;
         lista_barriles_verticales->siguiente = NULL;
     } else{
         BarrilVertical *temp = lista_barriles_verticales;
@@ -27,6 +28,7 @@ void nuevoBarrilVertical(){
         nuevo_barril->barril_y = 104.0;
         nuevo_barril->barril_nivel_piso = 196.0;
         nuevo_barril->barril_id = 0;
+        nuevo_barril->direccion = 1;
         nuevo_barril->siguiente = NULL;
         temp->siguiente = nuevo_barril;
     }

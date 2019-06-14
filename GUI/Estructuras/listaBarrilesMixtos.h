@@ -15,6 +15,7 @@ typedef struct BarrilMixto
     int barril_id;
     int en_plataforma;
     int despues_escalera;
+    int direccion;
     struct BarrilMixto *siguiente;
 } BarrilMixto;
 

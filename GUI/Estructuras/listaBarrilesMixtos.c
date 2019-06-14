@@ -85,6 +85,7 @@ void nuevoBarrilMixto(){
         lista_barriles_mixtos->barril_nivel_piso = 196.0;
         lista_barriles_mixtos->barril_id = 0;
         lista_barriles_mixtos->en_plataforma = 1;
+        lista_barriles_mixtos->direccion = 1;
         lista_barriles_mixtos->despues_escalera = 0;
         lista_barriles_mixtos->siguiente = NULL;
     } else{
@@ -98,6 +99,7 @@ void nuevoBarrilMixto(){
         nuevo_barril->barril_nivel_piso = 196.0;
         nuevo_barril->barril_id = 0;
         nuevo_barril->en_plataforma = 1;
+        nuevo_barril->direccion = 1;
         nuevo_barril->despues_escalera = 0;
         nuevo_barril->siguiente = NULL;
         temp->siguiente = nuevo_barril;

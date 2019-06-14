@@ -13,6 +13,7 @@ typedef struct BarrilL
     float barril_y;
     float barril_nivel_piso;
     int barril_id;
+    int direccion;
     struct BarrilL *siguiente;
 } BarrilL;
 
