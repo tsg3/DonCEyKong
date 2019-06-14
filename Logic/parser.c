@@ -41,47 +41,54 @@ void actualizarDatos(char* instruccion){
             break;
         }
         case 'b': {
-            printf("Barriles = ");
-            int largo = strlen(instruccion);
-            char strBarriles[largo-9];
-            memcpy(strBarriles, instruccion+9,largo-10);
-            strBarriles[largo-10] = '\0';
-            int comas = 0;
-            for (int i = 0; *(strBarriles+i) != '\0'; i++){
-                if ( *(strBarriles+i) == ','){
-                    comas++;
+            if (*(instruccion+9) == ')'){
+                printf("Barriles = NULL\n");
+                break;
+            }
+            else {
+                printf("Barriles = ");
+                int largo = strlen(instruccion);
+                char strBarriles[largo - 9];
+                memcpy(strBarriles, instruccion + 9, largo - 10);
+                strBarriles[largo - 10] = '\0';
+                int comas = 0;
+                for (int i = 0; *(strBarriles + i) != '\0'; i++) {
+                    if (*(strBarriles + i) == ',') {
+                        comas++;
+                    }
                 }
-            }
-            int n = comas + 1;
-            struct Barril barriles[n];
-            int largoNombre = 0;
-            int pos = 0;
-            for (int i = 0; i < n; i++){
-                for (int j = 0; *(strBarriles+j+pos) != '-'; j++){
-                    largoNombre++;
+                int n = comas + 1;
+                struct Barril barriles[n];
+                int largoNombre = 0;
+                int pos = 0;
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; *(strBarriles + j + pos) != '-'; j++) {
+                        largoNombre++;
+                    }
+                    struct Barril barril;
+                    barril.nombre = (char *) malloc(largoNombre + 1);
+                    char strX[5], strY[5];
+                    memcpy(strX, strBarriles + pos + largoNombre + 1, 4);
+                    memcpy(strY, strBarriles + pos + largoNombre + 6, 4);
+                    memcpy(barril.nombre, strBarriles + pos, largoNombre);
+                    strX[4] = '\0';
+                    strY[4] = '\0';
+                    barril.nombre[largoNombre] = '\0';
+                    int x = atoi(strX);
+                    int y = atoi(strY);
+                    barril.x = x;
+                    barril.y = y;
+                    barriles[i] = barril;
+                    pos += 13 + largoNombre - 2;
+                    largoNombre = 0;
                 }
-                struct Barril barril;
-                barril.nombre = (char *) malloc(largoNombre+1);
-                char strX[5], strY[5];
-                memcpy(strX, strBarriles + pos + largoNombre + 1 ,4);
-                memcpy(strY, strBarriles + pos + largoNombre + 6 ,4);
-                memcpy(barril.nombre, strBarriles + pos ,largoNombre);
-                strX[4] = '\0';
-                strY[4] = '\0';
-                barril.nombre[largoNombre] = '\0';
-                int x = atoi(strX);
-                int y = atoi(strY);
-                barril.x = x;
-                barril.y = y;
-                barriles[i] = barril;
-                pos += 13 + largoNombre - 2;
-                largoNombre = 0;
+                for (int i = 0; i < n; i++) {
+                    printf("\n           --> Barril = %s ~ PosX %d ~ PosY = %d ", barriles[i].nombre, barriles[i].x,
+                           barriles[i].y);
+                }
+                printf("\n");
+                break;
             }
-            for (int i = 0; i < n; i++) {
-                printf("\n           --> Barril = %s ~ PosX %d ~ PosY = %d ",barriles[i].nombre,barriles[i].x,barriles[i].y);
-            }
-            printf("\n");
-            break;
         }
         case 'm': {
             char strX[5], strY[5];
@@ -95,47 +102,54 @@ void actualizarDatos(char* instruccion){
             break;
         }
         case 'f': {
-            printf("Fuegos   = ");
-            int largo = strlen(instruccion);
-            char strFuegos[largo-7];
-            memcpy(strFuegos, instruccion+7,largo-8);
-            strFuegos[largo-8] = '\0';
-            int comas = 0;
-            for (int i = 0; *(strFuegos+i) != '\0'; i++){
-                if ( *(strFuegos+i) == ','){
-                    comas++;
+            if (*(instruccion+7) == ')'){
+                printf("Fuegos   = NULL\n");
+                break;
+            }
+            else {
+                printf("Fuegos   = ");
+                int largo = strlen(instruccion);
+                char strFuegos[largo - 7];
+                memcpy(strFuegos, instruccion + 7, largo - 8);
+                strFuegos[largo - 8] = '\0';
+                int comas = 0;
+                for (int i = 0; *(strFuegos + i) != '\0'; i++) {
+                    if (*(strFuegos + i) == ',') {
+                        comas++;
+                    }
                 }
-            }
-            int n = comas + 1;
-            struct Fuego fuegos[n];
-            int largoNombre = 0;
-            int pos = 0;
-            for (int i = 0; i < n; i++){
-                for (int j = 0; *(strFuegos+j+pos) != '-'; j++){
-                    largoNombre++;
+                int n = comas + 1;
+                struct Fuego fuegos[n];
+                int largoNombre = 0;
+                int pos = 0;
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; *(strFuegos + j + pos) != '-'; j++) {
+                        largoNombre++;
+                    }
+                    struct Fuego fuego;
+                    fuego.nombre = (char *) malloc(largoNombre + 1);
+                    char strX[5], strY[5];
+                    memcpy(strX, strFuegos + pos + largoNombre + 1, 4);
+                    memcpy(strY, strFuegos + pos + largoNombre + 6, 4);
+                    memcpy(fuego.nombre, strFuegos + pos, largoNombre);
+                    strX[4] = '\0';
+                    strY[4] = '\0';
+                    fuego.nombre[largoNombre] = '\0';
+                    int x = atoi(strX);
+                    int y = atoi(strY);
+                    fuego.x = x;
+                    fuego.y = y;
+                    fuegos[i] = fuego;
+                    pos += 13 + largoNombre - 2;
+                    largoNombre = 0;
                 }
-                struct Fuego fuego;
-                fuego.nombre = (char *) malloc(largoNombre+1);
-                char strX[5], strY[5];
-                memcpy(strX, strFuegos + pos + largoNombre + 1 ,4);
-                memcpy(strY, strFuegos + pos + largoNombre + 6 ,4);
-                memcpy(fuego.nombre, strFuegos + pos ,largoNombre);
-                strX[4] = '\0';
-                strY[4] = '\0';
-                fuego.nombre[largoNombre] = '\0';
-                int x = atoi(strX);
-                int y = atoi(strY);
-                fuego.x = x;
-                fuego.y = y;
-                fuegos[i] = fuego;
-                pos += 13 + largoNombre - 2;
-                largoNombre = 0;
+                for (int i = 0; i < n; i++) {
+                    printf("\n           --> Fuego = %s ~ PosX %d ~ PosY = %d ", fuegos[i].nombre, fuegos[i].x,
+                           fuegos[i].y);
+                }
+                printf("\n");
+                break;
             }
-            for (int i = 0; i < n; i++) {
-                printf("\n           --> Fuego = %s ~ PosX %d ~ PosY = %d ",fuegos[i].nombre,fuegos[i].x,fuegos[i].y);
-            }
-            printf("\n");
-            break;
         }
         case 'v': {
             int vidas = *(instruccion+6) - '0';

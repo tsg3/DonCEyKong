@@ -6,7 +6,7 @@
 
 int main(){
 
-    /*char instruccion[] = "{nivel(1);puntos(000000);tiempo(60);barriles();mario(0030.0030);fuegos();vidas(3)}";
+    /*char instruccion[] = "{nivel(1);puntos(000000);tiempo(60);barriles(b12-0001.0001,b13-0002.0002);mario(0030.0030);fuegos();vidas(3)}";
     if (strcmp(instruccion, "{1}") == 0){
         printf("~~~ PAUSA ~~~");
     }
@@ -16,7 +16,7 @@ int main(){
     }
     return 0;*/
 
-    int execution = initialize();
+    /*int execution = initialize();
 
     switch (execution){
         case 1: break;
@@ -27,7 +27,7 @@ int main(){
 
     reading();
 
-    finishExecution();
+    finishExecution();*/
 
     /*int inicio = iniciar_server();
 
