@@ -4,6 +4,36 @@
 #include <windows.h>
 
 char SendBuff[512],RecvBuff[512];
+int observer = 0;
+
+
+void streaming(char *buffer){
+
+    if (strcmp (buffer, "izquierda") == 0){
+
+        //Send(izquierda); a los demas clientes
+    }
+    if (strcmp (buffer, "arriba") == 0){
+
+        //Send(arriba); a los demas clientes
+    }
+    if (strcmp (buffer, "derecha") == 0){
+
+        //Send(derecha); a los demas clientes
+    }else{
+        //Send(salto); a los demas clientes
+    }
+
+
+/*
+ * send(buffer)
+ * nuevaVentana();
+ * moverMario(buffer):
+ * */
+
+
+}
+
 
 int main(int argc, char *argv[]){
   
@@ -52,35 +82,93 @@ int main(int argc, char *argv[]){
   /*strcpy(SendBuff,"Hola");
   send(conn_socket,SendBuff,sizeof(SendBuff),0);
   printf("Datos enviados: %s \n", SendBuff);*/
-  
+
+
+  //no se si esto recibe mensaje entonces lo quite ya que no he mandado nada
+  //como para recibir algo
+
+  /*
   recv(conn_socket,RecvBuff, sizeof(RecvBuff), 0);
   printf("Mensaje recibido: %s \n", RecvBuff);
   
   char *message = "TESTEO\0";
   strcpy(SendBuff,message);
-  
+  */
   char buffer[512];
   
   while(1){
 	printf("Enter a message :\n");
 	scanf("%s", &buffer[0]);
-	send(conn_socket, buffer, strlen(buffer), 0);
+	//send(conn_socket, buffer, strlen(buffer), 0);
 	printf("Data enviada : %s\n",buffer);
 	if(strcmp(buffer, ":exit") == 0){
 		close(conn_socket);
 		printf("[-]Disconnected from server.\n");
 		return 1;
 	}
-	if(recv(conn_socket, buffer, 1024, 0) < 0){
+	else if (strcmp(buffer, "1") == 0){
+        send(conn_socket, buffer, strlen(buffer), 0);
+        printf("Data enviada : izquierda\n");
+	}
+	else if (strcmp(buffer, "2") == 0){
+	    send(conn_socket, buffer, strlen(buffer), 0);
+	    printf("Data enviada : arriba\n");
+	}
+	else if (strcmp(buffer, "3") == 0){
+	    send(conn_socket, buffer, strlen(buffer), 0);
+	    printf("Data enviada : derecha\n");
+	}
+	else if (strcmp(buffer, "4") == 0){
+	    send(conn_socket, buffer, strlen(buffer), 0);
+	    printf("Data enviada : salto\n");
+	}
+	else if (strcmp(buffer, "5") == 0){
+	    send(conn_socket, buffer, strlen(buffer), 0);
+	    printf("Data enviada : abajo\n");
+	}
+	else if(strcmp(buffer, "win") == 0){
+	    send(conn_socket, buffer, strlen(buffer), 0);
+	    printf("Data enviada : gano\n");
+	}
+	else if(strcmp(buffer, "lose") == 0){
+	    send(conn_socket, buffer, strlen(buffer), 0);
+	    printf("Data enviada : murio\n");
+	}
+	/*else if(recv(conn_socket, buffer, 1024, 0) < 0){
 		printf("[-]Error in receiving data.\n");
 	}
+	 */
 	else{
+        send(conn_socket, buffer, strlen(buffer), 0);
+        printf("Data enviada : all\n");
+	    /*
 		printf("Server: \t%s\n", buffer);
+		if (observer == 1){
+		    streaming(buffer);
+
+		}else{
+            if (strcmp(buffer, "barril1") == 0){
+                printf("Barril normal enviado.\n");
+                //lanzarBarril(1, pos)
+            }
+            if (strcmp(buffer, "barril2") == 0){
+                printf("Barril caida libre enviado.\n");
+                //lanzarBarril(1, lugarAleatorio)
+            }
+            if (strcmp(buffer, "barril3") == 0){
+                printf("Barril mix enviado.\n");
+                //lanzarBarrilEspecial(pos)
+            }if (strcmp(buffer, "fire") == 0){
+                printf("FIREEEEEEEEE.\n");
+                //encenderLlamas();
+            }
+		}*/
 	}
   }
-  
+  /*
+
   // Cerramos el socket y liberamos la DLL de sockets
   close(conn_socket);
   WSACleanup();
-  return EXIT_SUCCESS;
-} 
+  return EXIT_SUCCESS;*/
+}
