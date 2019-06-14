@@ -100,6 +100,7 @@ int initialize(){
         al_destroy_event_queue(event_queue);
         return -1;
     }
+    crearEscaleras();
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_timer_event_source(timer));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
@@ -234,6 +235,10 @@ void reading(){
                     nuevoBarrilVertical();
                     CreateThread(NULL, 0, barrilVerticalThread, ultimoBarrilVertical(), 0, 0);
                     break;
+                case ALLEGRO_KEY_M:
+                    nuevoBarrilMixto();
+                    CreateThread(NULL, 0, barrilMixtoThread, ultimoBarrilMixto(), 0, 0);
+                    break;
             }
         }
         else if(ev.type == ALLEGRO_EVENT_KEY_UP) {
@@ -270,6 +275,10 @@ void reading(){
                 //printf("1---> %f %f\n",lista_barriles_verticales->barril_x,lista_barriles_verticales->barril_y);
                 actualizarBarrilesVerticales(lista_barriles_verticales);
             }
+            if(hay_barril_mixto > 0){
+                //printf("1---> %f %f\n",lista_barriles_verticales->barril_x,lista_barriles_verticales->barril_y);
+                actualizarBarrilesMixto(lista_barriles_mixtos);
+            }
 
             if (!vivo) {
                 if (posicionMuerto == finalMuerto){
@@ -287,6 +296,9 @@ void reading(){
                     while(hay_barril_vertical > 0){
                         eliminarBarrilVertical();
                     }
+                    while(hay_barril_mixto > 0){
+                        eliminarBarrilMixto();
+                    }
                     //printf("FIN\n");
                 }
             }
@@ -300,6 +312,112 @@ void reading(){
             }
             al_flip_display();
         }
+    }
+}
+
+DWORD WINAPI barrilMixtoThread(void* BarrilM){
+    BarrilMixto *barril_actual = (BarrilMixto *) BarrilM;
+    movimientoBarrilMixto(barril_actual,818.0,172.0,2.0,2.0);
+    barril_actual->barril_nivel_piso = 258.0;
+    movimientoBarrilMixto(barril_actual,46.0,248.0,-2.0,2.0);
+    barril_actual->barril_nivel_piso = 316.0;
+    movimientoBarrilMixto(barril_actual,818.0,328.0,2.0,2.0);
+    barril_actual->barril_nivel_piso = 378.0;
+    movimientoBarrilMixto(barril_actual,46.0,404.0,-2.0,2.0);
+    barril_actual->barril_nivel_piso = 436.0;
+    movimientoBarrilMixto(barril_actual,818.0,480.0,2.0,2.0);
+    barril_actual->barril_nivel_piso = 494.0;
+    barril_actual->en_plataforma = 1;
+    while (barril_actual->barril_x > 0.0){
+        if (!vivo){
+            redraw = true;
+            return 0;
+        }
+        barril_actual->barril_x += -2.0;
+        barril_actual->barril_y = barril_actual->barril_nivel_piso - obtenerPiso(barril_actual->barril_x,barril_actual->barril_nivel_piso);
+        redraw = true;
+        Sleep(20);
+    }
+    redraw = true;
+    return 0;
+}
+
+void movimientoVerticalBarrilMixto(BarrilMixto* barril_actual, float y, float mov){
+    for (int i = 0; barril_actual->barril_y < y; i++) {
+        if (!vivo) {
+            redraw = true;
+            return;
+        }
+        barril_actual->barril_y += mov;
+        redraw = true;
+        Sleep(20);
+    }
+    if (barril_actual->barril_y != y) {
+        if (!vivo) {
+            redraw = true;
+            return;
+        }
+        barril_actual->barril_y = y;
+        redraw = true;
+        Sleep(20);
+    }
+}
+
+int movimientoHorizontalBarrilMixto(BarrilMixto* barril_actual, float x, float mov){
+    int result = 0;
+    while ((barril_actual->barril_x < x && mov > 0.0) || (barril_actual->barril_x > x && mov < 0.0)){
+        if (!vivo){
+            redraw = true;
+            return 0;
+        }
+        if (barril_actual->barril_x == escaleras_rangos[barril_actual->despues_escalera]->x && barril_actual->barril_y == escaleras_rangos[barril_actual->despues_escalera]->arriba_y)
+        {
+            if (random > 13) {
+                result = escaleras_rangos[barril_actual->despues_escalera]->abajo_y;
+                barril_actual->despues_escalera = escaleras_rangos[barril_actual->despues_escalera]->siguiente;
+                break;
+            }
+            else{
+                barril_actual->despues_escalera++;
+            }
+        }
+        barril_actual->barril_x += mov;
+        barril_actual->barril_y = barril_actual->barril_nivel_piso - obtenerPiso(barril_actual->barril_x,barril_actual->barril_nivel_piso);
+        redraw = true;
+        Sleep(20);
+    }
+    return result;
+}
+
+void movimientoBarrilMixto(BarrilMixto* barril_actual, float x, float y, float movX, float movY){
+    barril_actual->en_plataforma = 1;
+    int bajar = movimientoHorizontalBarrilMixto(barril_actual, x, movX);
+    barril_actual->en_plataforma = 0;
+    if (bajar == 0){
+        movimientoVerticalBarrilMixto(barril_actual, y, movY);
+    }
+    else {
+        movimientoVerticalBarrilMixto(barril_actual, bajar, movY);
+    }
+}
+
+void actualizarBarrilesMixto(BarrilMixto* barril_actual){
+    if (barril_actual->barril_id > 31){
+        barril_actual->barril_id = 0;
+    }
+    int id = (barril_actual->barril_id)/16;
+    ALLEGRO_BITMAP** images = barrilVertical;
+    if (barril_actual->en_plataforma){
+        id = (barril_actual->barril_id)/8;
+        images = barrilV;
+    }
+    al_draw_bitmap(*(images+id), barril_actual->barril_x, barril_actual->barril_y, 0);
+    barril_actual->barril_id++;
+    if (barril_actual->siguiente != NULL){
+        actualizarBarrilesMixto(barril_actual->siguiente);
+    }
+    if (barril_actual->barril_x <= 0){
+        eliminarUnBarrilMixto();
     }
 }
 
@@ -388,7 +506,7 @@ void actualizarBarrilesVerticales(BarrilVertical* barril_actual){
 }
 
 int choque(){
-    if ((!hay_barril_ && !hay_barril_vertical) || !vivo )
+    if ((!hay_barril_ && !hay_barril_vertical && !hay_barril_mixto) || !vivo )
     {
         return 0;
     }
@@ -429,6 +547,33 @@ int choque(){
                 }
             } else {
                 temp2 = temp2->siguiente;
+            }
+        }
+    }
+    BarrilMixto *temp3 = lista_barriles_mixtos;
+    while(temp3 != NULL && hay_barril_mixto) {
+        if (temp3->en_plataforma) {
+            if (colision(xM + 8.0, yM, xM + 22.0, yM + 30.0, temp3->barril_x + 4.0, temp3->barril_y + 12.0,
+                         temp3->barril_x + 26.0, temp3->barril_y + 30.0)) {
+                if (vivo) {
+                    vivo = 0;
+                    CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
+                    return -1;
+                }
+            } else {
+                temp3 = temp3->siguiente;
+            }
+        }
+        else{
+            if (colision(xM + 8.0, yM, xM + 22.0, yM + 30.0, temp3->barril_x + 0.0, temp3->barril_y + 12.0,
+                         temp3->barril_x + 30.0 , temp3->barril_y + 30.0)) {
+                if (vivo) {
+                    vivo = 0;
+                    CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
+                    return -1;
+                }
+            } else {
+                temp3 = temp3->siguiente;
             }
         }
     }

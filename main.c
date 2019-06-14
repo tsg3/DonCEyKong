@@ -2,8 +2,19 @@
 #include <stdio.h>
 #include <windows.h>
 #include "Server/server.h"
+#include "Logic/parser.h"
 
 int main(){
+
+    /*char instruccion[] = "{nivel(1);puntos(000000);tiempo(60);barriles();mario(0030.0030);fuegos();vidas(3)}";
+    if (strcmp(instruccion, "{1}") == 0){
+        printf("~~~ PAUSA ~~~");
+    }
+    else {
+        borrarCorchetes(instruccion);
+        analizarInstruccion(instruccion);
+    }
+    return 0;*/
 
     int execution = initialize();
 
