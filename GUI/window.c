@@ -23,6 +23,9 @@ int subiendo_escalera = 0;
 int saltando = 0;
 int vivo = 1;
 int random = 1;
+int barril_encendido = 0;
+int gasolinaAnimacion = 0;
+ALLEGRO_BITMAP* gasolinaA = NULL;
 
 int initialize(){
     if(!al_init()) {
@@ -58,12 +61,59 @@ int initialize(){
         al_destroy_timer(timer);
         return -1;
     }
+    crearImagenes();
+    gasolinaA = gasolinaAnimada[0];
+    if (errorImagenes()){
+        return -1;
+    }
+    xM = 40;
+    yM = nivelPiso;
+    al_draw_bitmap(marioX[0], xM, yM, 0);
+    crearEscaleras();
+    al_register_event_source(event_queue, al_get_display_event_source(display));
+    al_register_event_source(event_queue, al_get_timer_event_source(timer));
+    al_register_event_source(event_queue, al_get_keyboard_event_source());
+    al_clear_to_color(al_map_rgb(0,0,0));
+    escaleras(escalera);
+    barrels(image2);
+    platforms(image);
+    martillos(martillo);
+    gasolina_inicial(gasolina);
+    al_flip_display();
+    al_start_timer(timer);
+    return 1;
+}
+
+int verificarBarrilEncendido(){
+    BarrilL *temp1 = lista_barriles;
+    while(temp1 != NULL){
+        if(temp1->barril_x <= 100 && temp1->barril_y == 494){
+            return 1;
+        }
+        temp1 = temp1->siguiente;
+    }
+    BarrilVertical *temp2 = lista_barriles_verticales;
+    while(temp2 != NULL){
+        if(temp2->barril_x <= 100 && temp2->barril_y == 494){
+            return 1;
+        }
+        temp2 = temp2->siguiente;
+    }
+    BarrilMixto *temp3 = lista_barriles_mixtos;
+    while(temp3 != NULL){
+        if(temp3->barril_x <= 100 && temp3->barril_y == 494){
+            return 1;
+        }
+        temp3 = temp3->siguiente;
+    }
+    return 0;
+}
+
+void crearImagenes(){
     image = createImage("estructuras","estructuras_sprite_3.png");
     image2 = createImage("estructuras","estructuras_sprite_0.png");
     martillo = createImage("estructuras","estructuras_sprite_1.png");
     gasolina = createImage("gasolina","gasolina_sprite_0.png");
-
-
     marioX[0] = createImage("jumpman_caminar","jumpman_sprite_0.png");
     marioX[1] = createImage("jumpman_caminar","jumpman_sprite_1.png");
     marioX[2] = createImage("jumpman_caminar","jumpman_sprite_2.png");
@@ -83,36 +133,29 @@ int initialize(){
     barrilV[3] = createImage("barril","barril_sprite_3.png");
     barrilVertical[0] = createImage("barril","barril_sprite_4.png");
     barrilVertical[1] = createImage("barril","barril_sprite_5.png");
+    fuegoI[0] = createImage("fuego","fuego_sprite_0.png");
+    fuegoI[1] = createImage("fuego","fuego_sprite_1.png");
+    fuegoI[2] = createImage("fuego","fuego_sprite_2.png");
+    fuegoI[3] = createImage("fuego","fuego_sprite_3.png");
     escalera = createImage("estructuras","escalera_sprite_0.png");
-    xM = 40;
-    yM = nivelPiso;
-    al_draw_bitmap(marioX[0], xM, yM, 0);
+    gasolinaAnimada[0] = createImage("gasolina","gasolina_sprite_1.png");
+    gasolinaAnimada[1] = createImage("gasolina","gasolina_sprite_2.png");
+}
 
-
+int errorImagenes(){
     if(!image || !image2 || !martillo || !gasolina || !escalera || !marioX[0] || !marioX[1]
-    || !marioX[2] || !marioY[0] || !marioY[1] || !marioY[2] || !marioZ[0] || !marioZ[1] || !marioM[0] || !marioM[1]
-    || !marioM[2] || !marioM[3] || !marioM[4] || !barrilV[0] || !barrilV[1] || !barrilV[2] || !barrilV[3]
-    || !barrilVertical[0] || !barrilVertical[1]) {
+       || !marioX[2] || !marioY[0] || !marioY[1] || !marioY[2] || !marioZ[0] || !marioZ[1] || !marioM[0] || !marioM[1]
+       || !marioM[2] || !marioM[3] || !marioM[4] || !barrilV[0] || !barrilV[1] || !barrilV[2] || !barrilV[3]
+       || !barrilVertical[0] || !barrilVertical[1] || !fuegoI[0] || !fuegoI[1] || !fuegoI[2] || !fuegoI[3]
+       || !gasolinaAnimada[0] || !gasolinaAnimada[1]) {
         al_show_native_message_box(display, "Error", "Error", "Failed to load image!",
                                    NULL, ALLEGRO_MESSAGEBOX_ERROR);
         al_destroy_display(display);
         al_destroy_timer(timer);
         al_destroy_event_queue(event_queue);
-        return -1;
+        return 1;
     }
-    crearEscaleras();
-    al_register_event_source(event_queue, al_get_display_event_source(display));
-    al_register_event_source(event_queue, al_get_timer_event_source(timer));
-    al_register_event_source(event_queue, al_get_keyboard_event_source());
-    al_clear_to_color(al_map_rgb(0,0,0));
-    escaleras(escalera);
-    barrels(image2);
-    platforms(image);
-    martillos(martillo);
-    gasolina_inicial(gasolina);
-    al_flip_display();
-    al_start_timer(timer);
-    return 1;
+    return 0;
 }
 
 void finishExecution(){
@@ -128,7 +171,6 @@ void finishExecution(){
     al_destroy_bitmap(marioY[0]);
     al_destroy_bitmap(marioY[1]);
     al_destroy_bitmap(marioY[2]);
-
     al_destroy_bitmap(marioZ[0]);
     al_destroy_bitmap(marioZ[1]);
     al_destroy_bitmap(marioM[0]);
@@ -140,7 +182,14 @@ void finishExecution(){
     al_destroy_bitmap(barrilV[1]);
     al_destroy_bitmap(barrilV[2]);
     al_destroy_bitmap(barrilV[3]);
-
+    al_destroy_bitmap(barrilVertical[0]);
+    al_destroy_bitmap(barrilVertical[1]);
+    al_destroy_bitmap(fuegoI[0]);
+    al_destroy_bitmap(fuegoI[1]);
+    al_destroy_bitmap(fuegoI[2]);
+    al_destroy_bitmap(fuegoI[3]);
+    al_destroy_bitmap(gasolinaAnimada[0]);
+    al_destroy_bitmap(gasolinaAnimada[1]);
     al_destroy_timer(timer);
     al_destroy_event_queue(event_queue);
 }
@@ -152,7 +201,13 @@ void reading(){
     mario = marioX;
     while(1)
     {
+        //printf("hor = %d || ver = %d || mix = %d || fire = %d\n",hay_barril_,hay_barril_vertical,hay_barril_mixto,hay_fuego);
         random++;
+        if(!barril_encendido){
+            if (verificarBarrilEncendido()){
+                barril_encendido = 1;
+            }
+        }
         if(random>27){
             random = 1;
         }
@@ -239,6 +294,10 @@ void reading(){
                     nuevoBarrilMixto();
                     CreateThread(NULL, 0, barrilMixtoThread, ultimoBarrilMixto(), 0, 0);
                     break;
+                case ALLEGRO_KEY_F:
+                    nuevoFuego();
+                    CreateThread(NULL, 0, fuegoThread, ultimoFuego(), 0, 0);
+                    break;
             }
         }
         else if(ev.type == ALLEGRO_EVENT_KEY_UP) {
@@ -263,7 +322,15 @@ void reading(){
             al_clear_to_color(al_map_rgb(0,0,0));
             barrels(image2);
             martillos(martillo);
-            gasolina_inicial(gasolina);
+            if (barril_encendido) {
+                if (!gasolinaAnimacion) {
+                    CreateThread(NULL, 0, animacionGasolina, NULL, 0, 0);
+                }
+                gasolina_inicial(gasolinaA);
+            }
+            else{
+                gasolina_inicial(gasolina);
+            }
             escaleras(escalera);
             platforms(image);
             yM = nivelPiso - obtenerPiso(xM,nivelPiso) - salto;
@@ -279,6 +346,9 @@ void reading(){
                 //printf("1---> %f %f\n",lista_barriles_verticales->barril_x,lista_barriles_verticales->barril_y);
                 actualizarBarrilesMixto(lista_barriles_mixtos);
             }
+            if(hay_fuego > 0){
+                actualizarFuegos(fuegos);
+            }
 
             if (!vivo) {
                 if (posicionMuerto == finalMuerto){
@@ -290,6 +360,10 @@ void reading(){
                     xM = 40.0;
                     yM = 494.0;
                     nivelPiso = 494.0;
+                    saltando = 0;
+                    barril_encendido = 0;
+                    subiendo_escalera = 0;
+                    gasolinaAnimacion = 0;
                     while(hay_barril_ > 0){
                         eliminarBarril();
                     }
@@ -298,6 +372,9 @@ void reading(){
                     }
                     while(hay_barril_mixto > 0){
                         eliminarBarrilMixto();
+                    }
+                    while(hay_fuego > 0){
+                        eliminarFuego();
                     }
                     //printf("FIN\n");
                 }
@@ -313,6 +390,284 @@ void reading(){
             al_flip_display();
         }
     }
+}
+
+DWORD WINAPI fuegoThread(void* fuego){
+    FuegoE *fuego_actual = (FuegoE *) fuego;
+    while (1){
+        if (fuego_actual->nivelPiso > nivelPiso){
+            escalerasPorPiso(fuego_actual,1);
+            if (!vivo){
+                redraw = true;
+                return 0;
+            }
+        }
+        else if (fuego_actual->nivelPiso < nivelPiso){
+            escalerasPorPiso(fuego_actual,-1);
+            if (!vivo){
+                redraw = true;
+                return 0;
+            }
+        }
+        else{
+            int x = xM;
+            if (fuego_actual->x < x){
+                for (; fuego_actual->x < x; fuego_actual->x += 2.0){
+                    if (!vivo){
+                        redraw = true;
+                        return 0;
+                    }
+                    fuego_actual->y = fuego_actual->nivelPiso - obtenerPiso(fuego_actual->x,fuego_actual->nivelPiso);
+                    redraw = true;
+                    Sleep(30);
+                }
+            }
+            else if (fuego_actual->x > x){
+                for (; fuego_actual->x > x; fuego_actual->x -= 2.0) {
+                    if (!vivo){
+                        redraw = true;
+                        return 0;
+                    }
+                    fuego_actual->y = fuego_actual->nivelPiso - obtenerPiso(fuego_actual->x, fuego_actual->nivelPiso);
+                    redraw = true;
+                    Sleep(30);
+                }
+            }
+        }
+        redraw = true;
+        Sleep(30);
+    }
+}
+
+void escalerasPorPiso(FuegoE* fuego_actual, int direccion){
+    int id = 0;
+    int id_distancia = 0;
+    int result = 0;
+    float nuevoPiso = 0.0;
+    float mov = 2.0;
+    if (direccion == -1){
+        mov = -2.0;
+    }
+    switch ((int) fuego_actual->nivelPiso){
+        case 494 :{
+            id = 10;
+            id_distancia = escaleraCercana(fuego_actual, id);
+            result = escaleraCercana(fuego_actual, 11);
+            if (result < id_distancia){
+                id = 11;
+            }
+            nuevoPiso = 436.0;
+            break;
+        }
+        case 436 :{
+            if (direccion == 1){
+                id = 8;
+                id_distancia = escaleraCercana(fuego_actual, id);
+                result = escaleraCercana(fuego_actual, 9);
+                if (result < id_distancia){
+                    id = 9;
+                }
+                nuevoPiso = 378.0;
+            }
+            else{
+                id = 10;
+                id_distancia = escaleraCercana(fuego_actual, id);
+                result = escaleraCercana(fuego_actual, 11);
+                if (result < id_distancia){
+                    id = 11;
+                }
+                nuevoPiso = 494.0;
+            }
+            break;
+        }
+        case 378 :{
+            if (direccion == 1){
+                id = 5;
+                id_distancia = escaleraCercana(fuego_actual, id);
+                result = escaleraCercana(fuego_actual, 6);
+                if (result < id_distancia){
+                    id_distancia = result;
+                    id = 6;
+                }
+                result = escaleraCercana(fuego_actual, 7);
+                if (result < id_distancia){
+                    id = 7;
+                }
+                nuevoPiso = 316.0;
+            }
+            else{
+                id = 8;
+                id_distancia = escaleraCercana(fuego_actual, id);
+                result = escaleraCercana(fuego_actual, 9);
+                if (result < id_distancia){
+                    id = 9;
+                }
+                nuevoPiso = 436.0;
+            }
+            break;
+        }
+        case 316 :{
+            if (direccion == 1){
+                id = 2;
+                id_distancia = escaleraCercana(fuego_actual, id);
+                result = escaleraCercana(fuego_actual, 3);
+                if (result < id_distancia){
+                    id_distancia = result;
+                    id = 3;
+                }
+                result = escaleraCercana(fuego_actual, 4);
+                if (result < id_distancia){
+                    id = 4;
+                }
+                nuevoPiso = 258.0;
+            }
+            else{
+                id = 5;
+                id_distancia = escaleraCercana(fuego_actual, id);
+                result = escaleraCercana(fuego_actual, 6);
+                if (result < id_distancia){
+                    id_distancia = result;
+                    id = 6;
+                }
+                result = escaleraCercana(fuego_actual, 7);
+                if (result < id_distancia){
+                    id = 7;
+                }
+                nuevoPiso = 378.0;
+            }
+            break;
+        }
+        case 258 :{
+            if (direccion == 1){
+                id = 0;
+                id_distancia = escaleraCercana(fuego_actual, id);
+                result = escaleraCercana(fuego_actual, 1);
+                if (result < id_distancia){
+                    id = 1;
+                }
+                nuevoPiso = 196.0;
+            }
+            else{
+                id = 2;
+                id_distancia = escaleraCercana(fuego_actual, id);
+                result = escaleraCercana(fuego_actual, 3);
+                if (result < id_distancia){
+                    id_distancia = result;
+                    id = 3;
+                }
+                result = escaleraCercana(fuego_actual, 4);
+                if (result < id_distancia){
+                    id = 4;
+                }
+                nuevoPiso = 316.0;
+            }
+            break;
+        }
+        case 196 :{
+            id = 0;
+            id_distancia = escaleraCercana(fuego_actual, id);
+            result = escaleraCercana(fuego_actual, 1);
+            if (result < id_distancia){
+                id = 1;
+            }
+            nuevoPiso = 258.0;
+            break;
+        }
+        default : break;
+    }
+    //printf("%d %d %d %f %f || %f %f\n",id,id_distancia,result,nuevoPiso,mov,fuego_actual->nivelPiso,nivelPiso);
+    moverFuegoEscalera(fuego_actual,escaleras_rangos[id]->x,mov);
+    if (!vivo){
+        redraw = true;
+        return;
+    }
+    if (mov < 0.0){
+        useEscalera(fuego_actual,escaleras_rangos[id]->abajo_y, -1.0 * (mov/2));
+        if (!vivo){
+            redraw = true;
+            return;
+        }
+    }
+    else {
+        useEscalera(fuego_actual, escaleras_rangos[id]->arriba_y, -1.0 * (mov/2));
+        if (!vivo){
+            redraw = true;
+            return;
+        }
+    }
+    fuego_actual->nivelPiso = nuevoPiso;
+}
+
+int escaleraCercana(FuegoE* fuego_actual, int id){
+    return abs((int)fuego_actual->x - escaleras_rangos[id]->x);
+}
+
+void moverFuegoEscalera(FuegoE* fuego_actual, float x, float mov){
+    if (fuego_actual->x < x){
+        if (mov < 0.0){
+            mov *= -1.0;
+        }
+        for (; fuego_actual->x < x; fuego_actual->x += mov) {
+            if (!vivo){
+                redraw = true;
+                return;
+            }
+            fuego_actual->y = fuego_actual->nivelPiso - obtenerPiso(fuego_actual->x, fuego_actual->nivelPiso);
+            redraw = true;
+            Sleep(30);
+        }
+    }
+    else {
+        if (mov > 0.0){
+            mov *= -1.0;
+        }
+        for (; fuego_actual->x > x; fuego_actual->x += mov) {
+            if (!vivo){
+                redraw = true;
+                return;
+            }
+            fuego_actual->y = fuego_actual->nivelPiso - obtenerPiso(fuego_actual->x, fuego_actual->nivelPiso);
+            redraw = true;
+            Sleep(30);
+        }
+    }
+}
+
+void useEscalera(FuegoE* fuego_actual, float y, float mov){
+    for (int i = 0; fuego_actual->y != y; i++) {
+        if (!vivo) {
+            redraw = true;
+            return;
+        }
+        fuego_actual->y += mov;
+        redraw = true;
+        Sleep(30);
+    }
+}
+
+void actualizarFuegos(FuegoE* fuego_actual){
+    if (fuego_actual->id > 31){
+        fuego_actual->id = 0;
+    }
+    int id = (fuego_actual->id)/16;
+    al_draw_bitmap(fuegoI[id], fuego_actual->x, fuego_actual->y, 0);
+    fuego_actual->id++;
+    if (fuego_actual->siguiente != NULL){
+        actualizarFuegos(fuego_actual->siguiente);
+    }
+}
+
+DWORD WINAPI animacionGasolina(){
+    gasolinaAnimacion = 1;
+    while (vivo){
+        gasolinaA = gasolinaAnimada[0];
+        redraw = true;
+        Sleep(100);
+        gasolinaA = gasolinaAnimada[1];
+        redraw = true;
+        Sleep(100);
+    }
+    return 0;
 }
 
 DWORD WINAPI barrilMixtoThread(void* BarrilM){
@@ -506,7 +861,7 @@ void actualizarBarrilesVerticales(BarrilVertical* barril_actual){
 }
 
 int choque(){
-    if ((!hay_barril_ && !hay_barril_vertical && !hay_barril_mixto) || !vivo )
+    if ((!hay_barril_ && !hay_barril_vertical && !hay_barril_mixto && !hay_fuego) || !vivo )
     {
         return 0;
     }
@@ -575,6 +930,19 @@ int choque(){
             } else {
                 temp3 = temp3->siguiente;
             }
+        }
+    }
+    FuegoE *temp4 = fuegos;
+    while(temp4 != NULL && hay_fuego) {
+        if (colision(xM+8.0, yM, xM+22.0, yM+30.0, temp4->x+4.0, temp4->y+12.0, temp4->x+26.0, temp4->y+30.0)) {
+            if (vivo) {
+                vivo = 0;
+                CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
+                return -1;
+            }
+        }
+        else{
+            temp4 = temp4->siguiente;
         }
     }
     return 0;

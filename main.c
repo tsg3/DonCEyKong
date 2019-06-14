@@ -16,7 +16,7 @@ int main(){
     }
     return 0;*/
 
-    /*int execution = initialize();
+    int execution = initialize();
 
     switch (execution){
         case 1: break;
@@ -27,7 +27,7 @@ int main(){
 
     reading();
 
-    finishExecution();*/
+    finishExecution();
 
     /*int inicio = iniciar_server();
 

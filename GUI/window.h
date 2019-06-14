@@ -2,9 +2,10 @@
 #define DONCEYKONGUSER_WINDOW_H
 
 #include "allegro5/allegro.h"
-#include "listaBarriles.h"
-#include "listaBarrilesVerticales.h"
-#include "listaBarrilesMixtos.h"
+#include "Estructuras/listaBarriles.h"
+#include "Estructuras/listaBarrilesVerticales.h"
+#include "Estructuras/listaBarrilesMixtos.h"
+#include "Estructuras/listaFuegos.h"
 
 ALLEGRO_DISPLAY *display;
 ALLEGRO_EVENT_QUEUE *event_queue;
@@ -21,9 +22,25 @@ ALLEGRO_BITMAP* marioX[3];
 ALLEGRO_BITMAP* marioY[3];
 ALLEGRO_BITMAP* marioZ[2];
 ALLEGRO_BITMAP* marioM[5];
-
-
+ALLEGRO_BITMAP* fuegoI[4];
 ALLEGRO_BITMAP* barrilV[4];
+ALLEGRO_BITMAP* gasolinaAnimada[2];
+
+int barril_encendido;
+int verificarBarrilEncendido();
+DWORD WINAPI animacionGasolina();
+int gasolinaAnimacion;
+ALLEGRO_BITMAP* gasolinaA;
+
+DWORD WINAPI fuegoThread(void* fuego);
+void actualizarFuegos(FuegoE* fuego_actual);
+void escalerasPorPiso(FuegoE* fuego_actual, int direccion);
+int escaleraCercana(FuegoE* fuego_actual, int id);
+void moverFuegoEscalera(FuegoE* fuego_actual, float x, float mov);
+void useEscalera(FuegoE* fuego_actual, float y, float mov);
+
+void crearImagenes();
+int errorImagenes();
 DWORD WINAPI barrilThread(void* barril);
 void movimientoBarril(BarrilL* barril_actual, float x, float y, float mov);
 void actualizarBarriles(BarrilL* barril_actual);
