@@ -27,6 +27,9 @@ int barril_encendido = 0;
 int gasolinaAnimacion = 0;
 ALLEGRO_BITMAP* gasolinaA = NULL;
 int poder = 0;
+ALLEGRO_BITMAP* donkey = NULL;
+ALLEGRO_BITMAP* pauline = NULL;
+int ganar = 0;
 
 int initialize(){
     if(!al_init()) {
@@ -84,6 +87,8 @@ int initialize(){
     escaleras(escalera);
     barrels(image2);
     platforms(image);
+    paulineS(pauline);
+    donceyS(donkey);
     estrellas(estrella);
     gasolina_inicial(gasolina);
     al_flip_display();
@@ -121,6 +126,8 @@ void crearImagenes(){
     image2 = createImage("estructuras","estructuras_sprite_0.png");
     estrella = createImage("estructuras","estrellas_sprite_0.png");
     gasolina = createImage("gasolina","gasolina_sprite_0.png");
+    pauline = createImage("pauline","pauline_sprite_0.png");
+    donkey = createImage("doncey","doncey_sprite_0.png");
     marioX[0] = createImage("jumpman_caminar","jumpman_sprite_0.png");
     marioX[1] = createImage("jumpman_caminar","jumpman_sprite_1.png");
     marioX[2] = createImage("jumpman_caminar","jumpman_sprite_2.png");
@@ -163,7 +170,7 @@ int errorImagenes(){
        || !marioM[2] || !marioM[3] || !marioM[4] || !barrilV[0] || !barrilV[1] || !barrilV[2] || !barrilV[3]
        || !barrilVertical[0] || !barrilVertical[1] || !fuegoI[0] || !fuegoI[1] || !fuegoI[2] || !fuegoI[3]
        || !gasolinaAnimada[0] || !gasolinaAnimada[1] || !marioIDorado[0] || !marioIDorado[1] || !marioIDorado[2] || !marioDDorado[0]
-       || !marioDDorado[1] || !marioDDorado[2] || !marioVDorado[0] || !marioVDorado[1]) {
+       || !marioDDorado[1] || !marioDDorado[2] || !marioVDorado[0] || !marioVDorado[1] || !pauline || !donkey) {
         al_show_native_message_box(display, "Error", "Error", "Failed to load image!",
                                    NULL, ALLEGRO_MESSAGEBOX_ERROR);
         al_destroy_display(display);
@@ -214,6 +221,8 @@ void finishExecution(){
     al_destroy_bitmap(marioDDorado[2]);
     al_destroy_bitmap(marioVDorado[0]);
     al_destroy_bitmap(marioVDorado[1]);
+    al_destroy_bitmap(pauline);
+    al_destroy_bitmap(donkey);
     al_destroy_timer(timer);
     al_destroy_event_queue(event_queue);
 }
@@ -226,223 +235,282 @@ void reading(){
     while(1)
     {
         //printf("hor = %d || ver = %d || mix = %d || fire = %d\n",hay_barril_,hay_barril_vertical,hay_barril_mixto,hay_fuego);
-        random++;
-        if(!barril_encendido){
-            if (verificarBarrilEncendido()){
-                barril_encendido = 1;
-            }
+        if (ganar){
         }
-        if(random>27){
-            random = 1;
+        else if (xM >= 352.0 && xM <= 544.0 && yM == 40.0 && !ganar){
+            int t = 10000;
+            int *tptr = &t;
+            CreateThread(NULL, 0, esperar, tptr, 0, 0);
         }
-        ALLEGRO_EVENT ev;
-        al_wait_for_event(event_queue, &ev);
-        if (dentroLimite() == -1){
-        }
-        else if (choque() == -1){
-        }
-        else if(ev.type == ALLEGRO_EVENT_TIMER) {
-            if(countKeys()==1) {
-                if (key[KEY_UP] && hay_escaleras(1) && !saltando && vivo) {
-                    nivelPiso -= 1;
-                    j++;
-                    mario = marioZ;
-                    if (poder){
-                        mario = marioVDorado;
-                    }
-                    k = &j;
-                }
-                if (key[KEY_DOWN] && hay_escaleras(0) && !saltando && vivo) {
-                    nivelPiso += 1;
-                    j++;
-                    mario = marioZ;
-                    if (poder){
-                        mario = marioVDorado;
-                    }
-                    k = &j;
-                }
-                if (key[KEY_LEFT] && xM >= 4.0 && !subiendo_escalera && vivo) {
-                    xM -= 2.0;
-                    i++;
-                    if (saltando == 1){
-                        i = 6;
-                    }
-                    mario = marioY;
-                    if (poder){
-                        mario = marioDDorado;
-                    }
-                    k = &i;
-                }
-                if (key[KEY_RIGHT] && xM <= 860.0 && !subiendo_escalera && vivo) {
-                    xM += 2.0;
-                    i++;
-                    if (saltando == 1){
-                        i = 6;
-                    }
-                    mario = marioX;
-                    if (poder){
-                        mario = marioIDorado;
-                    }
-                    k = &i;
-                }
-                redraw = true;
-                if (i > 8) {
-                    i = 0;
-                }
-                if (j > 9){
-                    j = 0;
+        else {
+            random++;
+            if (!barril_encendido) {
+                if (verificarBarrilEncendido()) {
+                    barril_encendido = 1;
+                    CreateThread(NULL, 0, crearFuego, NULL, 0, 0);
                 }
             }
-        }
-        else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-            break;
-        }
-        else if(ev.type == ALLEGRO_EVENT_KEY_DOWN) {
-            switch (ev.keyboard.keycode) {
-                case ALLEGRO_KEY_UP:
-                    key[KEY_UP] = true;
-                    break;
-                case ALLEGRO_KEY_DOWN:
+            if (random > 27) {
+                random = 1;
+            }
+            ALLEGRO_EVENT ev;
+            al_wait_for_event(event_queue, &ev);
+            if (dentroLimite() == -1) {
+            } else if (choque() == -1) {
+            } else if (ev.type == ALLEGRO_EVENT_TIMER) {
+                if (countKeys() == 1) {
+                    if (key[KEY_UP] && hay_escaleras(1) && !saltando && vivo) {
+                        nivelPiso -= 1;
+                        j++;
+                        mario = marioZ;
+                        if (poder) {
+                            mario = marioVDorado;
+                        }
+                        k = &j;
+                    }
+                    if (key[KEY_DOWN] && hay_escaleras(0) && !saltando && vivo) {
+                        nivelPiso += 1;
+                        j++;
+                        mario = marioZ;
+                        if (poder) {
+                            mario = marioVDorado;
+                        }
+                        k = &j;
+                    }
+                    if (key[KEY_LEFT] && xM >= 4.0 && !subiendo_escalera && vivo) {
+                        xM -= 2.0;
+                        i++;
+                        if (saltando == 1) {
+                            i = 6;
+                        }
+                        mario = marioY;
+                        if (poder) {
+                            mario = marioDDorado;
+                        }
+                        k = &i;
+                    }
+                    if (key[KEY_RIGHT] && xM <= 860.0 && !subiendo_escalera && vivo) {
+                        xM += 2.0;
+                        i++;
+                        if (saltando == 1) {
+                            i = 6;
+                        }
+                        mario = marioX;
+                        if (poder) {
+                            mario = marioIDorado;
+                        }
+                        k = &i;
+                    }
+                    redraw = true;
+                    if (i > 8) {
+                        i = 0;
+                    }
+                    if (j > 9) {
+                        j = 0;
+                    }
+                }
+            } else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+                break;
+            } else if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
+                switch (ev.keyboard.keycode) {
+                    case ALLEGRO_KEY_UP:
+                        if (!ganar) {
+                            key[KEY_UP] = true;
+                        }
+                        break;
+                    case ALLEGRO_KEY_DOWN:
+                        if (!ganar) {
+                            key[KEY_DOWN] = true;
+                        }
+                        break;
+                    case ALLEGRO_KEY_LEFT:
+                        if (!ganar) {
+                            key[KEY_LEFT] = true;
+                        }
+                        break;
+                    case ALLEGRO_KEY_RIGHT:
+                        if (!ganar) {
+                            key[KEY_RIGHT] = true;
+                        }
+                        i++;
+                        break;
+                    case ALLEGRO_KEY_SPACE:
+                        if (!subiendo_escalera && !saltando && vivo && !ganar) {
+                            CreateThread(NULL, 0, saltar, NULL, 0, 0);
+                        }
+                        break;
+                    case ALLEGRO_KEY_B:
+                        nuevoBarril();
+                        CreateThread(NULL, 0, barrilThread, ultimo(), 0, 0);
+                        break;
+                    case ALLEGRO_KEY_V:
+                        nuevoBarrilVertical();
+                        CreateThread(NULL, 0, barrilVerticalThread, ultimoBarrilVertical(), 0, 0);
+                        break;
+                    case ALLEGRO_KEY_M:
+                        nuevoBarrilMixto();
+                        CreateThread(NULL, 0, barrilMixtoThread, ultimoBarrilMixto(), 0, 0);
+                        break;
+                    case ALLEGRO_KEY_F:
+                        if (barril_encendido) {
+                            nuevoFuego();
+                            CreateThread(NULL, 0, fuegoThread, ultimoFuego(), 0, 0);
+                        }
+                        break;
+                }
+            } else if (ev.type == ALLEGRO_EVENT_KEY_UP) {
+                switch (ev.keyboard.keycode) {
+                    case ALLEGRO_KEY_UP:
+                        key[KEY_UP] = false;
+                        break;
+                    case ALLEGRO_KEY_DOWN:
+                        key[KEY_DOWN] = false;
+                        break;
+                    case ALLEGRO_KEY_LEFT:
+                        key[KEY_LEFT] = false;
+                        break;
+                    case ALLEGRO_KEY_RIGHT:
+                        key[KEY_RIGHT] = false;
+                        break;
+                }
+            }
+            //printf("redraw = %d\n",redraw);
+            if (redraw && al_is_event_queue_empty(event_queue)) {
+                redraw = false;
+                al_clear_to_color(al_map_rgb(0, 0, 0));
+                barrels(image2);
+                estrellas(estrella);
+                if (barril_encendido) {
+                    if (!gasolinaAnimacion) {
+                        CreateThread(NULL, 0, animacionGasolina, NULL, 0, 0);
+                    }
+                    gasolina_inicial(gasolinaA);
+                } else {
+                    gasolina_inicial(gasolina);
+                }
+                escaleras(escalera);
+                paulineS(pauline);
+                donceyS(donkey);
+                platforms(image);
+                yM = nivelPiso - obtenerPiso(xM, nivelPiso) - salto;
 
-                    key[KEY_DOWN] = true;
-                    break;
-                case ALLEGRO_KEY_LEFT:
-                    key[KEY_LEFT] = true;
-                    break;
-                case ALLEGRO_KEY_RIGHT:
-                    key[KEY_RIGHT] = true;
-                    i++;
-                    break;
-                case ALLEGRO_KEY_SPACE:
-                    if (!subiendo_escalera && !saltando && vivo) {
-                        CreateThread(NULL, 0, saltar, NULL, 0, 0);
-                    }
-                    break;
-                case ALLEGRO_KEY_B:
-                    nuevoBarril();
-                    CreateThread(NULL, 0, barrilThread, ultimo(), 0, 0);
-                    break;
-                case ALLEGRO_KEY_V:
-                    nuevoBarrilVertical();
-                    CreateThread(NULL, 0, barrilVerticalThread, ultimoBarrilVertical(), 0, 0);
-                    break;
-                case ALLEGRO_KEY_M:
-                    nuevoBarrilMixto();
-                    CreateThread(NULL, 0, barrilMixtoThread, ultimoBarrilMixto(), 0, 0);
-                    break;
-                case ALLEGRO_KEY_F:
-                    nuevoFuego();
-                    CreateThread(NULL, 0, fuegoThread, ultimoFuego(), 0, 0);
-                    break;
-            }
-        }
-        else if(ev.type == ALLEGRO_EVENT_KEY_UP) {
-            switch (ev.keyboard.keycode) {
-                case ALLEGRO_KEY_UP:
-                    key[KEY_UP] = false;
-                    break;
-                case ALLEGRO_KEY_DOWN:
-                    key[KEY_DOWN] = false;
-                    break;
-                case ALLEGRO_KEY_LEFT:
-                    key[KEY_LEFT] = false;
-                    break;
-                case ALLEGRO_KEY_RIGHT:
-                    key[KEY_RIGHT] = false;
-                    break;
-            }
-        }
-        //printf("redraw = %d\n",redraw);
-        if(redraw && al_is_event_queue_empty(event_queue)) {
-            redraw = false;
-            al_clear_to_color(al_map_rgb(0,0,0));
-            barrels(image2);
-            estrellas(estrella);
-            if (barril_encendido) {
-                if (!gasolinaAnimacion) {
-                    CreateThread(NULL, 0, animacionGasolina, NULL, 0, 0);
+                if (hay_barril_ > 0) {
+                    actualizarBarriles(lista_barriles);
                 }
-                gasolina_inicial(gasolinaA);
-            }
-            else{
-                gasolina_inicial(gasolina);
-            }
-            escaleras(escalera);
-            platforms(image);
-            yM = nivelPiso - obtenerPiso(xM,nivelPiso) - salto;
+                if (hay_barril_vertical > 0) {
+                    //printf("1---> %f %f\n",lista_barriles_verticales->barril_x,lista_barriles_verticales->barril_y);
+                    actualizarBarrilesVerticales(lista_barriles_verticales);
+                }
+                if (hay_barril_mixto > 0) {
+                    //printf("1---> %f %f\n",lista_barriles_verticales->barril_x,lista_barriles_verticales->barril_y);
+                    actualizarBarrilesMixto(lista_barriles_mixtos);
+                }
+                if (hay_fuego > 0) {
+                    actualizarFuegos(fuegos);
+                }
 
-            if(hay_barril_ > 0){
-                actualizarBarriles(lista_barriles);
-            }
-            if(hay_barril_vertical > 0){
-                //printf("1---> %f %f\n",lista_barriles_verticales->barril_x,lista_barriles_verticales->barril_y);
-                actualizarBarrilesVerticales(lista_barriles_verticales);
-            }
-            if(hay_barril_mixto > 0){
-                //printf("1---> %f %f\n",lista_barriles_verticales->barril_x,lista_barriles_verticales->barril_y);
-                actualizarBarrilesMixto(lista_barriles_mixtos);
-            }
-            if(hay_fuego > 0){
-                actualizarFuegos(fuegos);
-            }
+                if (!vivo) {
+                    if (posicionMuerto == finalMuerto) {
+                        muertoID = 4;
+                        vivo = 1;
+                    }
+                    al_draw_bitmap(marioM[muertoID], xM, posicionMuerto, 0);
+                    if (muertoID == 4) {
+                        xM = 40.0;
+                        yM = 494.0;
+                        nivelPiso = 494.0;
+                        saltando = 0;
+                        barril_encendido = 0;
+                        subiendo_escalera = 0;
+                        gasolinaAnimacion = 0;
+                        estrella1.disponible = 1;
+                        estrella2.disponible = 1;
+                        while (hay_barril_ > 0) {
+                            eliminarBarril();
+                        }
+                        while (hay_barril_vertical > 0) {
+                            eliminarBarrilVertical();
+                        }
+                        while (hay_barril_mixto > 0) {
+                            eliminarBarrilMixto();
+                        }
+                        while (hay_fuego > 0) {
+                            eliminarFuego();
+                        }
+                        //printf("FIN\n");
+                    }
+                } else {
 
-            if (!vivo) {
-                if (posicionMuerto == finalMuerto){
-                    muertoID = 4;
-                    vivo = 1;
+                    if (k == &i) {
+                        if (*k > 8) {
+                            *k = 0;
+                        }
+                        al_draw_bitmap(*(mario + ((*k) / 3)), xM, yM, 0);
+                    } else {
+                        if (*k > 9) {
+                            *k = 0;
+                        }
+                        al_draw_bitmap(*(mario + ((*k) / 5)), xM, yM, 0);
+                    }
                 }
-                al_draw_bitmap(marioM[muertoID], xM, posicionMuerto, 0);
-                if (muertoID == 4){
-                    xM = 40.0;
-                    yM = 494.0;
-                    nivelPiso = 494.0;
-                    saltando = 0;
-                    barril_encendido = 0;
-                    subiendo_escalera = 0;
-                    gasolinaAnimacion = 0;
-                    estrella1.disponible = 1;
-                    estrella2.disponible = 1;
-                    while(hay_barril_ > 0){
-                        eliminarBarril();
-                    }
-                    while(hay_barril_vertical > 0){
-                        eliminarBarrilVertical();
-                    }
-                    while(hay_barril_mixto > 0){
-                        eliminarBarrilMixto();
-                    }
-                    while(hay_fuego > 0){
-                        eliminarFuego();
-                    }
-                    //printf("FIN\n");
-                }
+                al_flip_display();
             }
-            else{
-                if (k == &i) {
-                    al_draw_bitmap(*(mario + ((*k) / 3)), xM, yM, 0);
-                }
-                else{
-                    al_draw_bitmap(*(mario + ((*k) / 5)), xM, yM, 0);
-                }
-            }
-            al_flip_display();
         }
     }
 }
 
+DWORD WINAPI crearFuego(){
+    Sleep(1000);
+    while (vivo && !ganar){
+        nuevoFuego();
+        CreateThread(NULL, 0, fuegoThread, ultimoFuego(), 0, 0);
+        Sleep(7500);
+    }
+    return 0;
+}
+
+DWORD WINAPI esperar(void* tiempo){
+    ganar = 1;
+    int *t = (int *) tiempo;
+    Sleep(*t);
+    xM = 40.0;
+    yM = 494.0;
+    nivelPiso = 494.0;
+    saltando = 0;
+    barril_encendido = 0;
+    subiendo_escalera = 0;
+    gasolinaAnimacion = 0;
+    estrella1.disponible = 1;
+    estrella2.disponible = 1;
+    while(hay_barril_ > 0){
+        eliminarBarril();
+    }
+    while(hay_barril_vertical > 0){
+        eliminarBarrilVertical();
+    }
+    while(hay_barril_mixto > 0){
+        eliminarBarrilMixto();
+    }
+    while(hay_fuego > 0){
+        eliminarFuego();
+    }
+    ganar = 0;
+    return 0;
+}
+
 DWORD WINAPI fuegoThread(void* fuego){
     FuegoE *fuego_actual = (FuegoE *) fuego;
-    while (1){
+    while (vivo && !ganar){
         if (fuego_actual->nivelPiso > nivelPiso){
             escalerasPorPiso(fuego_actual,1);
-            if (!vivo){
+            if (!vivo && !ganar){
                 redraw = true;
                 return 0;
             }
         }
         else if (fuego_actual->nivelPiso < nivelPiso){
             escalerasPorPiso(fuego_actual,-1);
-            if (!vivo){
+            if (!vivo && !ganar){
                 redraw = true;
                 return 0;
             }
@@ -452,7 +520,7 @@ DWORD WINAPI fuegoThread(void* fuego){
             if (fuego_actual->x < x){
                 fuego_actual->direccion = 1;
                 for (; fuego_actual->x < x; fuego_actual->x += 2.0){
-                    if (!vivo){
+                    if (!vivo && !ganar){
                         redraw = true;
                         return 0;
                     }
@@ -464,7 +532,7 @@ DWORD WINAPI fuegoThread(void* fuego){
             else if (fuego_actual->x > x){
                 fuego_actual->direccion = 0;
                 for (; fuego_actual->x > x; fuego_actual->x -= 2.0) {
-                    if (!vivo){
+                    if (!vivo && !ganar){
                         redraw = true;
                         return 0;
                     }
@@ -617,20 +685,20 @@ void escalerasPorPiso(FuegoE* fuego_actual, int direccion){
     }
     //printf("%d %d %d %f %f || %f %f\n",id,id_distancia,result,nuevoPiso,mov,fuego_actual->nivelPiso,nivelPiso);
     moverFuegoEscalera(fuego_actual,escaleras_rangos[id]->x,mov);
-    if (!vivo){
+    if (!vivo && !ganar){
         redraw = true;
         return;
     }
     if (mov < 0.0){
         useEscalera(fuego_actual,escaleras_rangos[id]->abajo_y, -1.0 * (mov/2));
-        if (!vivo){
+        if (!vivo && !ganar){
             redraw = true;
             return;
         }
     }
     else {
         useEscalera(fuego_actual, escaleras_rangos[id]->arriba_y, -1.0 * (mov/2));
-        if (!vivo){
+        if (!vivo && !ganar){
             redraw = true;
             return;
         }
@@ -649,7 +717,7 @@ void moverFuegoEscalera(FuegoE* fuego_actual, float x, float mov){
         }
         fuego_actual->direccion = 1;
         for (; fuego_actual->x < x; fuego_actual->x += mov) {
-            if (!vivo){
+            if (!vivo && !ganar){
                 redraw = true;
                 return;
             }
@@ -664,7 +732,7 @@ void moverFuegoEscalera(FuegoE* fuego_actual, float x, float mov){
         }
         fuego_actual->direccion = 0;
         for (; fuego_actual->x > x; fuego_actual->x += mov) {
-            if (!vivo){
+            if (!vivo && !ganar){
                 redraw = true;
                 return;
             }
@@ -677,7 +745,7 @@ void moverFuegoEscalera(FuegoE* fuego_actual, float x, float mov){
 
 void useEscalera(FuegoE* fuego_actual, float y, float mov){
     for (int i = 0; fuego_actual->y != y; i++) {
-        if (!vivo) {
+        if (!vivo && !ganar) {
             redraw = true;
             return;
         }
@@ -701,7 +769,7 @@ void actualizarFuegos(FuegoE* fuego_actual){
 
 DWORD WINAPI animacionGasolina(){
     gasolinaAnimacion = 1;
-    while (vivo){
+    while (vivo && !ganar){
         gasolinaA = gasolinaAnimada[0];
         redraw = true;
         Sleep(100);
@@ -732,7 +800,7 @@ DWORD WINAPI barrilMixtoThread(void* BarrilM){
     barril_actual->en_plataforma = 1;
     barril_actual->direccion = 0;
     while (barril_actual->barril_x > 0.0){
-        if (!vivo){
+        if (!vivo && !ganar){
             redraw = true;
             return 0;
         }
@@ -747,7 +815,7 @@ DWORD WINAPI barrilMixtoThread(void* BarrilM){
 
 void movimientoVerticalBarrilMixto(BarrilMixto* barril_actual, float y, float mov){
     for (int i = 0; barril_actual->barril_y < y; i++) {
-        if (!vivo) {
+        if (!vivo && !ganar) {
             redraw = true;
             return;
         }
@@ -756,7 +824,7 @@ void movimientoVerticalBarrilMixto(BarrilMixto* barril_actual, float y, float mo
         Sleep(20);
     }
     if (barril_actual->barril_y != y) {
-        if (!vivo) {
+        if (!vivo && !ganar) {
             redraw = true;
             return;
         }
@@ -769,7 +837,7 @@ void movimientoVerticalBarrilMixto(BarrilMixto* barril_actual, float y, float mo
 int movimientoHorizontalBarrilMixto(BarrilMixto* barril_actual, float x, float mov){
     int result = 0;
     while ((barril_actual->barril_x < x && mov > 0.0) || (barril_actual->barril_x > x && mov < 0.0)){
-        if (!vivo){
+        if (!vivo && !ganar){
             redraw = true;
             return 0;
         }
@@ -833,7 +901,7 @@ DWORD WINAPI barrilVerticalThread(void* BarrilV){
     float newX = (float) random * 32.0;
     if (newX > barril_actual->barril_x){
         while (barril_actual->barril_x < newX){
-            if (!vivo){
+            if (!vivo && !ganar){
                 redraw = true;
                 return 0;
             }
@@ -847,19 +915,19 @@ DWORD WINAPI barrilVerticalThread(void* BarrilV){
     barril_actual->barril_y = barril_actual->barril_nivel_piso - obtenerPiso(barril_actual->barril_x,barril_actual->barril_nivel_piso);
     redraw = true;
     Sleep(20);
-    if (!vivo){
+    if (!vivo && !ganar){
         redraw = true;
         return 0;
     }
     movimientobarrilVertical(barril_actual,494.0-obtenerPiso(barril_actual->barril_x,494.0),2.0);
-    if (!vivo){
+    if (!vivo && !ganar){
         redraw = true;
         return 0;
     }
     barril_actual->barril_nivel_piso = 494.0;
     barril_actual->direccion = 0;
     while (barril_actual->barril_x > 0.0){
-        if (!vivo){
+        if (!vivo && !ganar){
             redraw = true;
             return 0;
         }
@@ -874,7 +942,7 @@ DWORD WINAPI barrilVerticalThread(void* BarrilV){
 
 void movimientobarrilVertical(BarrilVertical* barril_actual, float y, float mov){
     for (int i = 0; barril_actual->barril_y < y; i++){
-        if (!vivo){
+        if (!vivo && !ganar){
             redraw = true;
             return;
         }
@@ -883,7 +951,7 @@ void movimientobarrilVertical(BarrilVertical* barril_actual, float y, float mov)
         Sleep(20);
     }
     if (barril_actual->barril_y != y) {
-        if (!vivo){
+        if (!vivo && !ganar){
             redraw = true;
             return;
         }
@@ -1063,7 +1131,7 @@ void actualizarBarriles(BarrilL* barril_actual){
 }
 
 DWORD WINAPI barrilThread(void* barril){
-    if (!vivo){
+    if (!vivo && !ganar){
         redraw = true;
         return 0;
     }
@@ -1071,42 +1139,42 @@ DWORD WINAPI barrilThread(void* barril){
     redraw = true;
     Sleep(20);
     movimientoBarril(barril_actual, 818.0, 172.0, 2.0);
-    if (!vivo){
+    if (!vivo && !ganar){
         redraw = true;
         return 0;
     }
     barril_actual->barril_nivel_piso = 258.0;
     barril_actual->direccion = 0;
     movimientoBarril(barril_actual, 46.0, 248.0, -2.0);
-    if (!vivo){
+    if (!vivo && !ganar){
         redraw = true;
         return 0;
     }
     barril_actual->barril_nivel_piso = 316.0;
     barril_actual->direccion = 1;
     movimientoBarril(barril_actual, 818.0, 328.0, 2.0);
-    if (!vivo){
+    if (!vivo && !ganar){
         redraw = true;
         return 0;
     }
     barril_actual->barril_nivel_piso = 378.0;
     barril_actual->direccion = 0;
     movimientoBarril(barril_actual, 46.0, 404.0, -2.0);
-    if (!vivo){
+    if (!vivo && !ganar){
         redraw = true;
         return 0;
     }
     barril_actual->barril_nivel_piso = 436.0;
     barril_actual->direccion = 1;
     movimientoBarril(barril_actual, 818.0, 480.0, 2.0);
-    if (!vivo){
+    if (!vivo && !ganar){
         redraw = true;
         return 0;
     }
     barril_actual->barril_nivel_piso = 494.0;
     barril_actual->direccion = 0;
     while (barril_actual->barril_x > 0.0){
-        if (!vivo){
+        if (!vivo && !ganar){
             redraw = true;
             return 0;
         }
@@ -1121,7 +1189,7 @@ DWORD WINAPI barrilThread(void* barril){
 
 void movimientoBarril(BarrilL* barril_actual, float x, float y, float mov){
     while ((barril_actual->barril_x < x && mov > 0.0) || (barril_actual->barril_x > x && mov < 0.0)){
-        if (!vivo){
+        if (!vivo && !ganar){
             redraw = true;
             return;
         }
@@ -1131,7 +1199,7 @@ void movimientoBarril(BarrilL* barril_actual, float x, float y, float mov){
         Sleep(20);
     }
     for (int i = 0; barril_actual->barril_y < y; i++){
-        if (!vivo){
+        if (!vivo && !ganar){
             redraw = true;
             return;
         }
@@ -1140,7 +1208,7 @@ void movimientoBarril(BarrilL* barril_actual, float x, float y, float mov){
         Sleep(20);
     }
     if (barril_actual->barril_y != y) {
-        if (!vivo){
+        if (!vivo && !ganar){
             redraw = true;
             return;
         }
@@ -1553,6 +1621,14 @@ void estrellas(ALLEGRO_BITMAP *imagen){
 
 void gasolina_inicial(ALLEGRO_BITMAP* imagen){
     al_draw_bitmap(imagen, 64, 478, 0);
+}
+
+void paulineS(ALLEGRO_BITMAP *imagen){
+    al_draw_bitmap(imagen, 352, 28, 0);
+}
+
+void donceyS(ALLEGRO_BITMAP* imagen){
+    al_draw_bitmap(imagen, 64, 40, 0);
 }
 
 ALLEGRO_BITMAP* createImage(char* carpeta, char* nombreImagen){

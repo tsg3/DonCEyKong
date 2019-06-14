@@ -17,6 +17,11 @@ ALLEGRO_BITMAP* image2;
 ALLEGRO_BITMAP* gasolina;
 ALLEGRO_BITMAP* escalera;
 
+ALLEGRO_BITMAP* donkey;
+ALLEGRO_BITMAP* pauline;
+void paulineS(ALLEGRO_BITMAP *imagen);
+void donceyS(ALLEGRO_BITMAP* imagen);
+
 ALLEGRO_BITMAP* estrella;
 struct Estrella{
     float x;
@@ -29,6 +34,8 @@ ALLEGRO_BITMAP* marioDDorado[3];
 ALLEGRO_BITMAP* marioVDorado[2];
 DWORD WINAPI poderEstrella();
 
+int ganar;
+
 ALLEGRO_BITMAP* marioX[3];
 ALLEGRO_BITMAP* marioY[3];
 ALLEGRO_BITMAP* marioZ[2];
@@ -38,6 +45,7 @@ ALLEGRO_BITMAP* barrilV[4];
 ALLEGRO_BITMAP* gasolinaAnimada[2];
 
 int barril_encendido;
+DWORD WINAPI crearFuego();
 int verificarBarrilEncendido();
 DWORD WINAPI animacionGasolina();
 int gasolinaAnimacion;
@@ -88,6 +96,8 @@ DWORD WINAPI morir();
 float posicionMuerto;
 float finalMuerto;
 int muertoID;
+
+DWORD WINAPI esperar(void* tiempo);
 
 int dentroLimite();
 int hay_escaleras(int arriba);
