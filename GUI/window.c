@@ -13,7 +13,7 @@ bool redraw = true;
 const float FPS = 60;
 ALLEGRO_BITMAP* image = NULL;
 ALLEGRO_BITMAP* image2 = NULL;
-ALLEGRO_BITMAP* martillo = NULL;
+ALLEGRO_BITMAP* estrella = NULL;
 ALLEGRO_BITMAP* gasolina = NULL;
 ALLEGRO_BITMAP* escalera = NULL;
 bool key[4] = { false, false, false, false };
@@ -26,6 +26,7 @@ int random = 1;
 int barril_encendido = 0;
 int gasolinaAnimacion = 0;
 ALLEGRO_BITMAP* gasolinaA = NULL;
+int poder = 0;
 
 int initialize(){
     if(!al_init()) {
@@ -61,6 +62,12 @@ int initialize(){
         al_destroy_timer(timer);
         return -1;
     }
+    estrella1.x = 64;
+    estrella1.y = 167;
+    estrella1.disponible = 1;
+    estrella2.x = 800;
+    estrella2.y = 398;
+    estrella2.disponible = 1;
     crearImagenes();
     gasolinaA = gasolinaAnimada[0];
     if (errorImagenes()){
@@ -77,7 +84,7 @@ int initialize(){
     escaleras(escalera);
     barrels(image2);
     platforms(image);
-    martillos(martillo);
+    estrellas(estrella);
     gasolina_inicial(gasolina);
     al_flip_display();
     al_start_timer(timer);
@@ -112,7 +119,7 @@ int verificarBarrilEncendido(){
 void crearImagenes(){
     image = createImage("estructuras","estructuras_sprite_3.png");
     image2 = createImage("estructuras","estructuras_sprite_0.png");
-    martillo = createImage("estructuras","estructuras_sprite_1.png");
+    estrella = createImage("estructuras","estrellas_sprite_0.png");
     gasolina = createImage("gasolina","gasolina_sprite_0.png");
     marioX[0] = createImage("jumpman_caminar","jumpman_sprite_0.png");
     marioX[1] = createImage("jumpman_caminar","jumpman_sprite_1.png");
@@ -140,14 +147,23 @@ void crearImagenes(){
     escalera = createImage("estructuras","escalera_sprite_0.png");
     gasolinaAnimada[0] = createImage("gasolina","gasolina_sprite_1.png");
     gasolinaAnimada[1] = createImage("gasolina","gasolina_sprite_2.png");
+    marioIDorado[0] = createImage("jumpman_estrella","jumpman_estrella_sprite_0.png");
+    marioIDorado[1] = createImage("jumpman_estrella","jumpman_estrella_sprite_1.png");
+    marioIDorado[2] = createImage("jumpman_estrella","jumpman_estrella_sprite_2.png");
+    marioDDorado[0] = createImage("jumpman_estrella","jumpman_estrella_sprite_3.png");
+    marioDDorado[1] = createImage("jumpman_estrella","jumpman_estrella_sprite_4.png");
+    marioDDorado[2] = createImage("jumpman_estrella","jumpman_estrella_sprite_5.png");
+    marioVDorado[0] = createImage("jumpman_estrella","subiendo_sprite_0.png");
+    marioVDorado[1] = createImage("jumpman_estrella","subiendo_sprite_1.png");
 }
 
 int errorImagenes(){
-    if(!image || !image2 || !martillo || !gasolina || !escalera || !marioX[0] || !marioX[1]
+    if(!image || !image2 || !estrella || !gasolina || !escalera || !marioX[0] || !marioX[1]
        || !marioX[2] || !marioY[0] || !marioY[1] || !marioY[2] || !marioZ[0] || !marioZ[1] || !marioM[0] || !marioM[1]
        || !marioM[2] || !marioM[3] || !marioM[4] || !barrilV[0] || !barrilV[1] || !barrilV[2] || !barrilV[3]
        || !barrilVertical[0] || !barrilVertical[1] || !fuegoI[0] || !fuegoI[1] || !fuegoI[2] || !fuegoI[3]
-       || !gasolinaAnimada[0] || !gasolinaAnimada[1]) {
+       || !gasolinaAnimada[0] || !gasolinaAnimada[1] || !marioIDorado[0] || !marioIDorado[1] || !marioIDorado[2] || !marioDDorado[0]
+       || !marioDDorado[1] || !marioDDorado[2] || !marioVDorado[0] || !marioVDorado[1]) {
         al_show_native_message_box(display, "Error", "Error", "Failed to load image!",
                                    NULL, ALLEGRO_MESSAGEBOX_ERROR);
         al_destroy_display(display);
@@ -162,7 +178,7 @@ void finishExecution(){
     al_destroy_display(display);
     al_destroy_bitmap(image);
     al_destroy_bitmap(image2);
-    al_destroy_bitmap(martillo);
+    al_destroy_bitmap(estrella);
     al_destroy_bitmap(gasolina);
     al_destroy_bitmap(escalera);
     al_destroy_bitmap(marioX[0]);
@@ -190,6 +206,14 @@ void finishExecution(){
     al_destroy_bitmap(fuegoI[3]);
     al_destroy_bitmap(gasolinaAnimada[0]);
     al_destroy_bitmap(gasolinaAnimada[1]);
+    al_destroy_bitmap(marioIDorado[0]);
+    al_destroy_bitmap(marioIDorado[1]);
+    al_destroy_bitmap(marioIDorado[2]);
+    al_destroy_bitmap(marioDDorado[0]);
+    al_destroy_bitmap(marioDDorado[1]);
+    al_destroy_bitmap(marioDDorado[2]);
+    al_destroy_bitmap(marioVDorado[0]);
+    al_destroy_bitmap(marioVDorado[1]);
     al_destroy_timer(timer);
     al_destroy_event_queue(event_queue);
 }
@@ -223,12 +247,18 @@ void reading(){
                     nivelPiso -= 1;
                     j++;
                     mario = marioZ;
+                    if (poder){
+                        mario = marioVDorado;
+                    }
                     k = &j;
                 }
                 if (key[KEY_DOWN] && hay_escaleras(0) && !saltando && vivo) {
                     nivelPiso += 1;
                     j++;
                     mario = marioZ;
+                    if (poder){
+                        mario = marioVDorado;
+                    }
                     k = &j;
                 }
                 if (key[KEY_LEFT] && xM >= 4.0 && !subiendo_escalera && vivo) {
@@ -238,6 +268,9 @@ void reading(){
                         i = 6;
                     }
                     mario = marioY;
+                    if (poder){
+                        mario = marioDDorado;
+                    }
                     k = &i;
                 }
                 if (key[KEY_RIGHT] && xM <= 860.0 && !subiendo_escalera && vivo) {
@@ -247,6 +280,9 @@ void reading(){
                         i = 6;
                     }
                     mario = marioX;
+                    if (poder){
+                        mario = marioIDorado;
+                    }
                     k = &i;
                 }
                 redraw = true;
@@ -321,7 +357,7 @@ void reading(){
             redraw = false;
             al_clear_to_color(al_map_rgb(0,0,0));
             barrels(image2);
-            martillos(martillo);
+            estrellas(estrella);
             if (barril_encendido) {
                 if (!gasolinaAnimacion) {
                     CreateThread(NULL, 0, animacionGasolina, NULL, 0, 0);
@@ -364,6 +400,8 @@ void reading(){
                     barril_encendido = 0;
                     subiendo_escalera = 0;
                     gasolinaAnimacion = 0;
+                    estrella1.disponible = 1;
+                    estrella2.disponible = 1;
                     while(hay_barril_ > 0){
                         eliminarBarril();
                     }
@@ -879,6 +917,14 @@ void actualizarBarrilesVerticales(BarrilVertical* barril_actual){
 }
 
 int choque(){
+    if (colision(xM+8.0, yM, xM+22.0, yM+30.0, 64.0, 167.0, 84.0, 187.0) && estrella1.disponible && !poder) {
+        estrella1.disponible = 0;
+        CreateThread(NULL, 0, poderEstrella, NULL, 0, 0);
+    }
+    if (colision(xM+8.0, yM, xM+22.0, yM+30.0, 800.0, 398.0, 820.0, 418.0) && estrella2.disponible && !poder) {
+        estrella2.disponible = 0;
+        CreateThread(NULL, 0, poderEstrella, NULL, 0, 0);
+    }
     if ((!hay_barril_ && !hay_barril_vertical && !hay_barril_mixto && !hay_fuego) || !vivo )
     {
         return 0;
@@ -886,7 +932,10 @@ int choque(){
     BarrilL* temp = lista_barriles;
     while(temp != NULL && hay_barril_) {
         if (colision(xM+8.0, yM, xM+22.0, yM+30.0, temp->barril_x+4.0, temp->barril_y+12.0, temp->barril_x+26.0, temp->barril_y+30.0)) {
-            if (vivo) {
+            if (poder){
+                return 0;
+            }
+            else if (vivo) {
                 vivo = 0;
                 CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
                 return -1;
@@ -901,7 +950,10 @@ int choque(){
         if (temp2->barril_nivel_piso == 494.0 || temp2->barril_y == 196.0 - obtenerPiso(temp2->barril_x,196.0)) {
             if (colision(xM + 8.0, yM, xM + 22.0, yM + 30.0, temp2->barril_x + 4.0, temp2->barril_y + 12.0,
                          temp2->barril_x + 26.0, temp2->barril_y + 30.0)) {
-                if (vivo) {
+                if (poder){
+                    return 0;
+                }
+                else if (vivo) {
                     vivo = 0;
                     CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
                     return -1;
@@ -913,7 +965,10 @@ int choque(){
         else{
             if (colision(xM + 8.0, yM, xM + 22.0, yM + 30.0, temp2->barril_x + 0.0, temp2->barril_y + 12.0,
                          temp2->barril_x + 30.0 , temp2->barril_y + 30.0)) {
-                if (vivo) {
+                if (poder){
+                    return 0;
+                }
+                else if (vivo) {
                     vivo = 0;
                     CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
                     return -1;
@@ -928,7 +983,10 @@ int choque(){
         if (temp3->en_plataforma) {
             if (colision(xM + 8.0, yM, xM + 22.0, yM + 30.0, temp3->barril_x + 4.0, temp3->barril_y + 12.0,
                          temp3->barril_x + 26.0, temp3->barril_y + 30.0)) {
-                if (vivo) {
+                if (poder){
+                    return 0;
+                }
+                else if (vivo) {
                     vivo = 0;
                     CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
                     return -1;
@@ -940,7 +998,10 @@ int choque(){
         else{
             if (colision(xM + 8.0, yM, xM + 22.0, yM + 30.0, temp3->barril_x + 0.0, temp3->barril_y + 12.0,
                          temp3->barril_x + 30.0 , temp3->barril_y + 30.0)) {
-                if (vivo) {
+                if (poder){
+                    return 0;
+                }
+                else if (vivo) {
                     vivo = 0;
                     CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
                     return -1;
@@ -953,7 +1014,10 @@ int choque(){
     FuegoE *temp4 = fuegos;
     while(temp4 != NULL && hay_fuego) {
         if (colision(xM+8.0, yM, xM+22.0, yM+30.0, temp4->x+4.0, temp4->y+12.0, temp4->x+26.0, temp4->y+30.0)) {
-            if (vivo) {
+            if (poder){
+                return 0;
+            }
+            else if (vivo) {
                 vivo = 0;
                 CreateThread(NULL, 0, muerteChoque, NULL, 0, 0);
                 return -1;
@@ -963,6 +1027,13 @@ int choque(){
             temp4 = temp4->siguiente;
         }
     }
+    return 0;
+}
+
+DWORD WINAPI poderEstrella(){
+    poder = 1;
+    Sleep(3000);
+    poder = 0;
     return 0;
 }
 
@@ -1471,9 +1542,13 @@ void barrels(ALLEGRO_BITMAP  *imagen){
     }
 }
 
-void martillos(ALLEGRO_BITMAP *imagen){
-    al_draw_bitmap(imagen, 64, 167, 0);
-    al_draw_bitmap(imagen, 800, 398, 0);
+void estrellas(ALLEGRO_BITMAP *imagen){
+    if (estrella1.disponible){
+        al_draw_bitmap(imagen, estrella1.x, estrella1.y, 0);
+    }
+    if (estrella2.disponible){
+        al_draw_bitmap(imagen, estrella2.x, estrella2.y, 0);
+    }
 }
 
 void gasolina_inicial(ALLEGRO_BITMAP* imagen){

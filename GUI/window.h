@@ -14,9 +14,20 @@ bool redraw;
 const float FPS;
 ALLEGRO_BITMAP* image;
 ALLEGRO_BITMAP* image2;
-ALLEGRO_BITMAP* martillo;
 ALLEGRO_BITMAP* gasolina;
 ALLEGRO_BITMAP* escalera;
+
+ALLEGRO_BITMAP* estrella;
+struct Estrella{
+    float x;
+    float y;
+    int disponible;
+} estrella1, estrella2;
+int poder;
+ALLEGRO_BITMAP* marioIDorado[3];
+ALLEGRO_BITMAP* marioDDorado[3];
+ALLEGRO_BITMAP* marioVDorado[2];
+DWORD WINAPI poderEstrella();
 
 ALLEGRO_BITMAP* marioX[3];
 ALLEGRO_BITMAP* marioY[3];
@@ -88,7 +99,7 @@ void reading();
 void escaleras(ALLEGRO_BITMAP  *imagen);
 void platforms(ALLEGRO_BITMAP  *imagen);
 void barrels(ALLEGRO_BITMAP  *imagen);
-void martillos(ALLEGRO_BITMAP *imagen);
+void estrellas(ALLEGRO_BITMAP *imagen);
 void gasolina_inicial(ALLEGRO_BITMAP* imagen);
 ALLEGRO_BITMAP* createImage(char* carpeta, char* nombreImagen);
 
